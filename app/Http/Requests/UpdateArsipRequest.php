@@ -1,0 +1,64 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class UpdateArsipRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        $arsip = $this->route('arsip');
+
+        return [
+            'kode_arsip' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('dokumen_arsip', 'kode_arsip')->ignore($arsip),
+            ],
+            'nomor_surat' => ['required', 'string', 'max:150'],
+            'perihal' => ['required', 'string', 'max:255'],
+            'jenis_surat' => ['required', Rule::in(['masuk', 'keluar'])],
+            'sifat_surat' => ['nullable', Rule::in(['biasa', 'penting', 'segera', 'rahasia'])],
+            'tanggal_surat' => ['required', 'date'],
+            'tanggal_diterima' => ['nullable', 'date'],
+            'asal_instansi' => ['nullable', 'string', 'max:150'],
+            'tujuan_instansi' => ['nullable', 'string', 'max:150'],
+            'seksi_id' => ['required', 'exists:seksi,id'],
+            'rak_id' => [
+                'nullable',
+                Rule::exists('rak_arsip', 'id')->where(function ($query) {
+                    $query->where('is_active', true);
+                    $seksiId = $this->input('seksi_id');
+                    if ($seksiId) {
+                        $query->where(function ($inner) use ($seksiId) {
+                            $inner->where('seksi_id', $seksiId)->orWhereNull('seksi_id');
+                        });
+                    }
+                }),
+            ],
+            'nomor_box' => ['nullable', 'string', 'max:50'],
+            'nomor_map' => ['nullable', 'string', 'max:50'],
+            'nomor_slot' => ['nullable', 'string', 'max:50'],
+            'keterangan_posisi' => ['nullable', 'string'],
+            'catatan' => ['nullable', 'string'],
+            'status_arsip' => ['nullable', Rule::in(['tersedia', 'dipinjam', 'hilang'])],
+            'lampiran' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+        ];
+    }
+}

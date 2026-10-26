@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class RakArsip extends Model
+{
+    protected $table = 'rak_arsip';
+
+    protected $fillable = [
+        'lokasi_id',
+        'seksi_id',
+        'kode_rak',
+        'nama_rak',
+        'nomor_rak',
+        'kapasitas',
+        'deskripsi',
+        'is_active',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+        ];
+    }
+
+    public function lokasiArsip(): BelongsTo
+    {
+        return $this->belongsTo(LokasiArsip::class, 'lokasi_id');
+    }
+
+    public function seksi(): BelongsTo
+    {
+        return $this->belongsTo(Seksi::class, 'seksi_id');
+    }
+
+    public function dokumenArsip(): HasMany
+    {
+        return $this->hasMany(DokumenArsip::class, 'rak_id');
+    }
+
+    public function getDisplayKapasitasAttribute(): int
+    {
+        return $this->kapasitas ?? 200;
+    }
+}
