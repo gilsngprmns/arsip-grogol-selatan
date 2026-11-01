@@ -18,12 +18,14 @@ class ReportController extends Controller
     public function activity(Request $request): StreamedResponse
     {
         return $this->csv('laporan-aktivitas', ['waktu', 'pengguna', 'aksi', 'keterangan', 'target', 'ip'], function ($handle) use ($request): void {
-            ActivityLog::query()->with('user:id,name')->whereNotIn('route_name', ['login', 'logout'])->filterByRequest($request)->latest()->chunk(200, function ($rows) use ($handle): void {
+            ActivityLog::query()->with('user:id,name')
+                ->whereNotIn('route_name', ['password.email', 'password.store', 'password.confirm', 'verification.send'])
+                ->filterByRequest($request)->latest()->chunk(200, function ($rows) use ($handle): void {
                 foreach ($rows as $row) {
                     // Zona Asia/Jakarta agar konsisten dengan tampilan halaman
                     $waktu = $row->created_at?->copy()->setTimezone('Asia/Jakarta')->format('d M Y, H.i.s') ?? '';
                     $target = filled($row->target_type) ? $row->target_type.': '.($row->target_label ?? '') : '';
-                    fputcsv($handle, [$waktu, $row->user?->name ?? 'Sistem', $row->action, $row->description, $target, $row->ip_address], ';');
+                    fputcsv($handle, [$waktu, $this->escCsv($row->user?->name ?? 'Sistem'), $row->action, $this->escCsv($row->description), $this->escCsv($target), $row->ip_address], ';');
                 }
             });
         });
@@ -71,5 +73,20 @@ class ReportController extends Controller
             $writer($handle);
             fclose($handle);
         }, $name.'-'.now()->format('Ymd-His').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /**
+     * Cegah serangan CSV injection: nilai yang diawali formula ( = + - @ )
+     * diberi prefix kutip tunggal agar tidak dieksekusi spreadsheet.
+     */
+    private function escCsv(?string $value): string
+    {
+        if (! strlen($value ?? '')) {
+            return $value ?? '';
+        }
+        if ($value[0] === '=' || $value[0] === '+' || $value[0] === '-' || $value[0] === '@') {
+            return "'{$value}";
+        }
+        return $value;
     }
 }
