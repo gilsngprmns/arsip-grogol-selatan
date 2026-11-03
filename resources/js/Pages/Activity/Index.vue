@@ -1,7 +1,8 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { useActivityLogLive } from '@/composables/useActivityLogLive';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
     activities: {
@@ -51,6 +52,7 @@ const actionMap = {
     'arsip.pinjam': 'Catat peminjaman',
     'arsip.kembalikan': 'Catat pengembalian',
     'arsip.settersedia': 'Set arsip tersedia',
+    'arsip.tandahilang': 'Tandai arsip hilang',
     'arsip.scan': 'Pindai QR arsip',
     'arsip.cadangkan': 'Cadangkan basis data arsip',
     'backup.export': 'Unduh cadangan',
@@ -59,12 +61,47 @@ const actionMap = {
     'backup.files': 'Unduh cadangan tersimpan',
     'profile.update': 'Perbarui profil',
     'profile.destroy': 'Hapus akun',
+    'arsip.export': 'Ekspor arsip',
+    'backup.index': 'Buka halaman backup',
+    'users.index': 'Buka daftar pengguna',
+    'activity.index': 'Buka log aktivitas',
+    'reports.activity': 'Ekspor laporan aktivitas',
+    'reports.users': 'Ekspor laporan pengguna',
+    'reports.racks': 'Ekspor laporan rak',
+    'reports.sections': 'Ekspor laporan seksi',
     'rak.store': 'Tambah rak',
     'rak.update': 'Perbarui rak',
     'rak.destroy': 'Nonaktifkan rak',
     'lokasi.store': 'Tambah lokasi',
     'lokasi.update': 'Perbarui lokasi',
     'lokasi.destroy': 'Nonaktifkan lokasi',
+    'beranda.slides.store': 'Tambah slide beranda',
+    'beranda.slides.destroy': 'Hapus slide beranda',
+    'manfaat.store': 'Tambah kartu manfaat',
+    'manfaat.update': 'Perbarui kartu manfaat',
+    'manfaat.destroy': 'Hapus kartu manfaat',
+    'alur_kerja.store': 'Tambah langkah prosedur',
+    'alur_kerja.update': 'Perbarui langkah prosedur',
+    'alur_kerja.destroy': 'Hapus langkah prosedur',
+    'faq.store': 'Tambah FAQ bantuan',
+    'faq.update': 'Perbarui FAQ bantuan',
+    'faq.destroy': 'Hapus FAQ bantuan',
+    'auth.login': 'Login',
+    'auth.logout': 'Logout',
+    // GET — halaman utama
+    'dashboard': 'Dashboard',
+    'arsip.index': 'Daftar arsip',
+    'arsip.show': 'Lihat arsip',
+    'arsip.create': 'Rekam berkas baru',
+    'arsip.edit': 'Edit arsip',
+    'rak.index': 'Daftar rak',
+    'lokasi.redirect': 'Daftar lokasi',
+    'scan.index': 'Pindai QR',
+    'profile.edit': 'Profil',
+    'halaman-publik.beranda': 'Foto Carousel',
+    'halaman-publik.manfaat': 'Kartu Manfaat',
+    'halaman-publik.alur-kerja': 'Langkah Prosedur',
+    'halaman-publik.faq': 'FAQ Bantuan',
 };
 
 const actionLabel = (activity) => {
@@ -85,14 +122,22 @@ const actionLabel = (activity) => {
 // Label opsion dropdown aksi (nilainya masih raw action/route name)
 const actionOptionLabel = (value) => actionMap[value] ?? value;
 
+const isGagal = (activity) => activity.metadata?.hasil === 'gagal' || activity.description?.startsWith('Gagal');
+
 // --- Badge kolom Aksi (kelas Tailwind yang sudah dipakai ArsipTable) ---
 const actionBadge = (activity) => {
+    if (isGagal(activity)) {
+        return 'bg-red-50 text-red-800 ring-red-300'; // gagal
+    }
     const key = activity.route_name || activity.action || '';
+    if (key === 'auth.login' || key === 'auth.logout') {
+        return 'bg-sky-50 text-sky-800 ring-sky-300';
+    }
     const suffix = key.split('.').pop();
     if (suffix === 'store' || key === 'arsip.kembalikan' || key === 'arsip.settersedia' || key === 'users.activate') {
         return 'bg-emerald-50 text-emerald-800 ring-emerald-300'; // tambah / pengembalian
     }
-    if (suffix === 'update' || key === 'arsip.pinjam' || key === 'arsip.scan' || key === 'users.password') {
+    if (suffix === 'update' || key === 'arsip.pinjam' || key === 'arsip.scan' || key === 'arsip.tandahilang' || key === 'users.password') {
         return 'bg-amber-50 text-amber-900 ring-amber-300'; // ubah / peminjaman
     }
     if (suffix === 'destroy' || suffix === 'force-delete') {
@@ -102,7 +147,7 @@ const actionBadge = (activity) => {
 };
 
 // --- Target di kolom Keterangan ---
-const targetPrefix = { dokumen: 'Dokumen', user: 'User', rak: 'Rak', lokasi: 'Lokasi' };
+const targetPrefix = { dokumen: 'Dokumen', user: 'User', rak: 'Rak', lokasi: 'Lokasi', halaman_publik: 'Halaman Publik' };
 
 // Baris hapus/permanen: objek kemungkinan sudah tidak ada → jangan di-link
 const targetGone = (activity) =>
@@ -213,6 +258,63 @@ const resetFilters = () => {
     applyFilters();
 };
 
+// ── Live updates: prepending entry baru tanpa refresh ─────────────────
+const page = usePage();
+const isAdmin = computed(() => page.props.auth?.user?.role === 'admin');
+
+// initialMaxId: id terbesar saat halaman pertama kali dimuat.
+// Entry live hanya prepend bila id > initialMaxId (jaga duplikat setelah Inertia refresh).
+const initialMaxId = ref(0);
+const liveActivities = ref([]);
+const liveCount = ref(0);
+
+const { newEntries, lastPolled, resetNewEntries } = useActivityLogLive();
+
+watch(
+    newEntries,
+    (entries) => {
+        if (!entries.length || initialMaxId.value === 0) return;
+        // Prepend entry yang belum ada di liveActivities dan belum ada di activities.data
+        const existingIds = new Set(
+            [...liveActivities.value, ...props.activities.data].map((a) => a.id),
+        );
+        const fresh = entries.filter((e) => !existingIds.has(e.id) && e.id > initialMaxId.value);
+        if (fresh.length) {
+            liveActivities.value = [...fresh, ...liveActivities.value];
+            liveCount.value += fresh.length;
+        }
+    },
+    { deep: true },
+);
+
+onMounted(() => {
+    const ids = props.activities.data.map((a) => a.id);
+    initialMaxId.value = ids.length ? Math.max(...ids) : 0;
+    resetNewEntries();
+});
+
+// Saat filter apply → reset liveActivities agar hanya entry yang lolos filter
+watch(hasActiveFilters, () => {
+    liveActivities.value = [];
+    liveCount.value = 0;
+});
+
+const lastPolledLabel = computed(() => {
+    if (!lastPolled.value) return '';
+    return new Intl.DateTimeFormat('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+    }).format(lastPolled.value);
+});
+
+// ── Data gabungan untuk tabel: live + Inertia ──────────────────────────
+const allActivities = computed(() => [
+    ...liveActivities.value,
+    ...props.activities.data,
+]);
+
 // Pintasan tanggal — hari kalender zona Asia/Jakarta (format YYYY-MM-DD)
 const jakartaDay = (offset) =>
     new Intl.DateTimeFormat('en-CA', {
@@ -281,16 +383,31 @@ const shortcutClass = 'rounded-xl border border-slate-200 px-3 py-1.5 text-xs fo
                 <div class="flex flex-wrap items-center gap-3">
                     <h1 class="text-2xl font-bold text-slate-900">Log Activity</h1>
                     <p class="text-sm text-slate-500">Riwayat aktivitas pengguna dan sistem.</p>
+                    <!-- Live badge (admin-only) -->
+                    <span
+                        v-if="isAdmin"
+                        class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        <span class="relative flex h-2 w-2">
+                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75 motion-reduce:hidden" />
+                            <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                        </span>
+                        Live
+                        <span v-if="liveCount > 0" class="text-emerald-600">+{{ liveCount }}</span>
+                    </span>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
+                    <p v-if="isAdmin && lastPolledLabel" class="text-xs text-slate-400">
+                        Diperbarui {{ lastPolledLabel }}
+                    </p>
                     <a
                         :href="csvUrl"
                         class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-sm hover:bg-slate-50 sm:flex-none"
                         title="Unduh log aktivitas sesuai filter aktif"
                     >
-                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-4-4m4 4l4-4" />
-                        </svg>
+                        <AppIcon name="download" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
                         Unduh CSV
                     </a>
                 </div>
@@ -298,7 +415,7 @@ const shortcutClass = 'rounded-xl border border-slate-200 px-3 py-1.5 text-xs fo
         </template>
 
         <!-- Baris filter (gaya Users/Index.vue) -->
-        <div class="mb-4 flex flex-col gap-2.5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:flex-row md:flex-wrap md:items-center md:gap-3 md:p-4">
+        <div v-reveal class="mb-4 flex flex-col gap-2.5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:flex-row md:flex-wrap md:items-center md:gap-3 md:p-4">
             <div class="flex items-center gap-1.5">
                 <input v-model="localFilters.tanggal_dari" type="date" :class="inputClass" title="Dari" @change="applyFilters" />
                 <span class="text-xs text-slate-400">–</span>
@@ -329,8 +446,67 @@ const shortcutClass = 'rounded-xl border border-slate-200 px-3 py-1.5 text-xs fo
             <button type="button" :class="buttonClass" @click="resetFilters">Reset</button>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div class="overflow-x-auto">
+        <div v-reveal :style="{ transitionDelay: '100ms' }" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <!-- Mobile / tablet: card list (< lg) -->
+            <div class="lg:hidden">
+                <div
+                    v-if="!allActivities.length"
+                    class="px-4 py-10 text-center text-sm text-slate-500"
+                >
+                    <template v-if="hasActiveFilters">
+                        Tidak ada aktivitas yang cocok dengan filter.
+                        <button type="button" class="mt-1 block text-xs font-semibold text-brand-blue hover:underline" @click="resetFilters">
+                            Reset filter
+                        </button>
+                    </template>
+                    <template v-else>Belum ada riwayat kegiatan. Aktivitas akan muncul setelah petugas mengelola arsip.</template>
+                </div>
+                <ul v-else class="divide-y divide-slate-100">
+                    <li
+                        v-for="activity in allActivities"
+                        :key="`card-${activity.id}`"
+                        class="px-4 py-3"
+                        :class="liveActivities.some(a => a.id === activity.id) ? 'bg-emerald-50/40' : ''"
+                    >
+                        <div class="flex items-start gap-3">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="text-xs font-medium text-slate-500">{{ formatDateTime(activity.created_at) }}</span>
+                                    <span
+                                        class="inline-flex rounded-full px-2 py-0.5 text-xs font-bold ring-1 ring-inset"
+                                        :class="actionBadge(activity)"
+                                    >{{ actionLabel(activity) }}</span>
+                                </div>
+                                <p class="mt-1 text-sm font-medium text-slate-800">
+                                    {{ activity.user?.name || 'Sistem' }}
+                                    <span class="text-xs text-slate-400">· {{ activity.user?.role || '' }}</span>
+                                </p>
+                                <p v-if="activity.user?.email" class="mt-0.5 text-xs text-slate-400">{{ activity.user.email }}</p>
+                                <p class="mt-0.5 text-xs text-slate-500">{{ descriptionLabel(activity) }}</p>
+                                <div v-if="targetLine(activity)" class="mt-0.5 text-xs">
+                                    <template v-if="targetLine(activity).href">
+                                        <Link
+                                            :href="targetLine(activity).href"
+                                            preserve-scroll
+                                            class="font-medium text-brand-blue hover:underline"
+                                        >{{ targetLine(activity).prefix }}: {{ targetLine(activity).label }}</Link>
+                                    </template>
+                                    <template v-else>
+                                        <span class="font-medium text-slate-700">{{ targetLine(activity).prefix }}: {{ targetLine(activity).label }}</span>
+                                    </template>
+                                </div>
+                                <div v-for="d in changedDetails(activity)" :key="d.label" class="mt-0.5 text-xs text-slate-400">
+                                    {{ d.label }}: {{ d.old }} → {{ d.new }}
+                                </div>
+                            </div>
+                            <span class="shrink-0 text-xs text-slate-400">{{ activity.ip_address || '—' }}</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Desktop: table (≥ lg) -->
+            <div class="hidden overflow-x-auto lg:block">
                 <table class="min-w-full text-left text-sm">
                     <thead>
                         <tr class="border-b border-slate-200 text-slate-600">
@@ -342,11 +518,17 @@ const shortcutClass = 'rounded-xl border border-slate-200 px-3 py-1.5 text-xs fo
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="activity in activities.data" :key="activity.id" class="border-b border-slate-100">
+                        <tr
+                            v-for="activity in allActivities"
+                            :key="activity.id"
+                            class="border-b border-slate-100"
+                            :class="liveActivities.some(a => a.id === activity.id) ? 'bg-emerald-50/40' : ''"
+                        >
                             <td class="whitespace-nowrap px-3 py-3 text-slate-600">{{ formatDateTime(activity.created_at) }}</td>
                             <td class="px-3 py-3">
                                 <div class="font-medium text-slate-800">{{ activity.user?.name || 'Sistem' }}</div>
                                 <div class="text-xs uppercase text-slate-400">{{ activity.user?.role || '' }}</div>
+                                <div v-if="activity.user?.email" class="text-xs text-slate-500 truncate max-w-[14rem]">{{ activity.user.email }}</div>
                             </td>
                             <td class="px-3 py-3">
                                 <span
@@ -376,7 +558,7 @@ const shortcutClass = 'rounded-xl border border-slate-200 px-3 py-1.5 text-xs fo
                             </td>
                             <td class="px-3 py-3 text-slate-500">{{ activity.ip_address || '—' }}</td>
                         </tr>
-                        <tr v-if="!activities.data?.length">
+                        <tr v-if="!allActivities.length">
                             <td colspan="5" class="px-3 py-10 text-center text-sm leading-7 text-slate-500">
                                 <template v-if="hasActiveFilters">
                                     Tidak ada aktivitas yang cocok dengan filter.
@@ -391,7 +573,7 @@ const shortcutClass = 'rounded-xl border border-slate-200 px-3 py-1.5 text-xs fo
                 </table>
             </div>
 
-            <!-- Paginasi (filter ikut lewat query string server) -->
+            <!-- Pagination (filter ikut lewat query string server) -->
             <div
                 v-if="activities.last_page > 1"
                 class="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 pt-3 sm:px-5"
