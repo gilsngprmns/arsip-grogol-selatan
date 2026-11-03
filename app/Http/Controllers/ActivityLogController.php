@@ -113,4 +113,28 @@ class ActivityLogController extends Controller
             'last_id' => $lastId,
         ]);
     }
+
+    /**
+     * Ringkasan statistik aktivitas hari ini (zone Asia/Jakarta).
+     * Dipanggil frontend tiap ~30 detik untuk memperbarui kartu ringkas.
+     */
+    public function stats(): JsonResponse
+    {
+        $today = now()->setTimezone('Asia/Jakarta')->startOfDay();
+
+        $baseQuery = ActivityLog::query()
+            ->where('created_at', '>=', $today)
+            ->whereNotIn('route_name', [
+                'password.email',
+                'password.store',
+                'password.confirm',
+                'verification.send',
+            ]);
+
+        return response()->json([
+            'today_total'    => $baseQuery->cloneQuery()->count(),
+            'today_users'    => $baseQuery->cloneQuery()->whereNotNull('user_id')->distinct()->count('user_id'),
+            'today_failed'   => $baseQuery->cloneQuery()->whereJsonContains('metadata->hasil', 'gagal')->count(),
+        ]);
+    }
 }

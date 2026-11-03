@@ -3,13 +3,18 @@
 use App\Http\Controllers\ArsipController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\HalamanPublikController;
 use App\Http\Controllers\LokasiArsipController;
-use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RakArsipController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\StafOnlineController;
 use App\Http\Controllers\UserManagementController;
 use App\Models\DokumenArsip;
+use App\Models\AlurKerja;
+use App\Models\BerandaSlide;
+use App\Models\Faq;
+use App\Models\Manfaat;
 use App\Models\ActivityLog;
 use App\Models\LokasiArsip;
 use App\Models\RakArsip;
@@ -26,24 +31,28 @@ Route::get('/', function () {
 
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
+        'berandaSlides' => BerandaSlide::query()->orderBy('sort')->get(['id', 'path', 'sort']),
     ]);
 })->name('home');
 
 Route::get('/fitur', function () {
     return Inertia::render('Public/Fitur', [
         'canLogin' => Route::has('login'),
+        'manfaat' => Manfaat::query()->orderBy('sort')->get(['id', 'judul', 'deskripsi', 'ikon']),
     ]);
 })->name('fitur');
 
 Route::get('/alur-kerja', function () {
     return Inertia::render('Public/AlurKerja', [
         'canLogin' => Route::has('login'),
+        'alurKerja' => AlurKerja::query()->orderBy('sort')->get(['id', 'nomor', 'judul', 'deskripsi', 'hasil']),
     ]);
 })->name('alur-kerja');
 
 Route::get('/bantuan', function () {
     return Inertia::render('Public/Bantuan', [
         'canLogin' => Route::has('login'),
+        'faq' => Faq::query()->orderBy('sort')->get(['id', 'pertanyaan', 'jawaban']),
     ]);
 })->name('bantuan');
 
@@ -250,7 +259,6 @@ Route::get('/dashboard', function (\Illuminate\Http\Request $request) {
 })->middleware(['auth', 'active', 'verified'])->name('dashboard');
 
 Route::middleware(['auth', 'active'])->group(function () {
-    Route::get('/search', GlobalSearchController::class)->name('search');
     Route::get('/scan', fn () => Inertia::render('Scan/Index'))->name('scan.index');
     Route::get('arsip/export', [ArsipController::class, 'exportCsv'])->name('arsip.export');
     Route::post('arsip/{arsip}/pinjam', [ArsipController::class, 'pinjam'])->name('arsip.pinjam');
@@ -262,6 +270,21 @@ Route::middleware(['auth', 'active'])->group(function () {
         ->name('arsip.scan');
 
     Route::middleware('admin')->group(function () {
+        // Daftar staf yang sedang online — dipanggil admin via polling ringan
+        Route::get('/api/staf-online', [StafOnlineController::class, 'index'])
+            ->middleware('throttle:120,1')
+            ->name('activity.staf-online');
+
+        // Log aktivitas terbaru — dipanggil halaman /activity-log via polling ringan
+        Route::get('/api/activity-log/recent', [ActivityLogController::class, 'recent'])
+            ->middleware('throttle:120,1')
+            ->name('activity.log-recent');
+
+        // Ringkasan statistik hari ini — dipanggil frontend untuk kartu ringkas
+        Route::get('/api/activity-log/stats', [ActivityLogController::class, 'stats'])
+            ->middleware('throttle:120,1')
+            ->name('activity.stats');
+
         Route::post('arsip/{arsip}/force-delete', [ArsipController::class, 'forceDelete'])
             ->name('arsip.force-delete');
         Route::get('/backup', [BackupController::class, 'index'])->name('backup.index');
@@ -294,6 +317,23 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/rak', [RakArsipController::class, 'store'])->name('rak.store');
         Route::put('/rak/{rak}', [RakArsipController::class, 'update'])->name('rak.update');
         Route::delete('/rak/{rak}', [RakArsipController::class, 'destroy'])->name('rak.destroy');
+
+        // Halaman Publik — kelola konten 4 halaman situs dari admin
+        Route::get('/halaman-publik/beranda', [HalamanPublikController::class, 'beranda'])->name('halaman-publik.beranda');
+        Route::get('/halaman-publik/manfaat', [HalamanPublikController::class, 'manfaat'])->name('halaman-publik.manfaat');
+        Route::get('/halaman-publik/alur-kerja', [HalamanPublikController::class, 'alurKerja'])->name('halaman-publik.alur-kerja');
+        Route::get('/halaman-publik/faq', [HalamanPublikController::class, 'faq'])->name('halaman-publik.faq');
+        Route::post('/halaman-publik/beranda-slides', [HalamanPublikController::class, 'storeSlide'])->name('beranda.slides.store');
+        Route::delete('/halaman-publik/beranda-slides/{slide}', [HalamanPublikController::class, 'destroySlide'])->name('beranda.slides.destroy');
+        Route::post('/halaman-publik/manfaat', [HalamanPublikController::class, 'storeManfaat'])->name('manfaat.store');
+        Route::put('/halaman-publik/manfaat/{manfaat}', [HalamanPublikController::class, 'updateManfaat'])->name('manfaat.update');
+        Route::delete('/halaman-publik/manfaat/{manfaat}', [HalamanPublikController::class, 'destroyManfaat'])->name('manfaat.destroy');
+        Route::post('/halaman-publik/alur-kerja', [HalamanPublikController::class, 'storeAlurKerja'])->name('alur_kerja.store');
+        Route::put('/halaman-publik/alur-kerja/{alur_kerja}', [HalamanPublikController::class, 'updateAlurKerja'])->name('alur_kerja.update');
+        Route::delete('/halaman-publik/alur-kerja/{alur_kerja}', [HalamanPublikController::class, 'destroyAlurKerja'])->name('alur_kerja.destroy');
+        Route::post('/halaman-publik/faq', [HalamanPublikController::class, 'storeFaq'])->name('faq.store');
+        Route::put('/halaman-publik/faq/{faq}', [HalamanPublikController::class, 'updateFaq'])->name('faq.update');
+        Route::delete('/halaman-publik/faq/{faq}', [HalamanPublikController::class, 'destroyFaq'])->name('faq.destroy');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -2,7 +2,8 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { useActivityLogLive } from '@/composables/useActivityLogLive';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import axios from 'axios';
 
 const props = defineProps({
     activities: {
@@ -291,6 +292,15 @@ onMounted(() => {
     const ids = props.activities.data.map((a) => a.id);
     initialMaxId.value = ids.length ? Math.max(...ids) : 0;
     resetNewEntries();
+    fetchStats();
+    // Refresh stats setiap 30 detik
+    window.__activityStatsTimer = setInterval(fetchStats, 30000);
+});
+
+onUnmounted(() => {
+    if (window.__activityStatsTimer) {
+        clearInterval(window.__activityStatsTimer);
+    }
 });
 
 // Saat filter apply → reset liveActivities agar hanya entry yang lolos filter
@@ -298,6 +308,18 @@ watch(hasActiveFilters, () => {
     liveActivities.value = [];
     liveCount.value = 0;
 });
+
+// ── Statistik ringkas hari ini ────────────────────────────────────────
+const stats = ref({ today_total: 0, today_users: 0, today_failed: 0 });
+
+const fetchStats = async () => {
+    try {
+        const { data } = await axios.get(route('activity.stats'));
+        stats.value = data;
+    } catch (err) {
+        console.warn('[activity-stats] fetch gagal:', err?.message || err);
+    }
+};
 
 const lastPolledLabel = computed(() => {
     if (!lastPolled.value) return '';
@@ -413,6 +435,25 @@ const shortcutClass = 'rounded-xl border border-slate-200 px-3 py-1.5 text-xs fo
                 </div>
             </div>
         </template>
+
+        <!-- Ringkasan statistik hari ini -->
+        <div v-if="stats.today_total > 0" v-reveal class="mb-4 grid grid-cols-3 gap-3">
+            <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                <p class="text-xs text-slate-500">Hari Ini</p>
+                <p class="mt-1 text-2xl font-bold text-slate-900">{{ stats.today_total }}</p>
+                <p class="text-xs text-slate-400">aktivitas</p>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                <p class="text-xs text-slate-500">Pengguna Aktif</p>
+                <p class="mt-1 text-2xl font-bold text-slate-900">{{ stats.today_users }}</p>
+                <p class="text-xs text-slate-400">pengguna</p>
+            </div>
+            <div v-if="stats.today_failed > 0" class="rounded-xl border border-rose-200 bg-rose-50 p-3 shadow-sm">
+                <p class="text-xs text-rose-500">Gagal</p>
+                <p class="mt-1 text-2xl font-bold text-rose-700">{{ stats.today_failed }}</p>
+                <p class="text-xs text-rose-400">kegagalan</p>
+            </div>
+        </div>
 
         <!-- Baris filter (gaya Users/Index.vue) -->
         <div v-reveal class="mb-4 flex flex-col gap-2.5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:flex-row md:flex-wrap md:items-center md:gap-3 md:p-4">
