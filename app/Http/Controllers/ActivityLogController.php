@@ -22,6 +22,18 @@ class ActivityLogController extends Controller
             'q' => trim((string) $request->query('q', '')),
         ];
 
+        // Hitung statistik ringkas hari ini untuk ditampilkan di halaman
+        $today = now()->setTimezone('Asia/Jakarta')->startOfDay();
+        $baseScope = function ($query) use ($today) {
+            $query->where('created_at', '>=', $today)
+                ->whereNotIn('route_name', [
+                    'password.email',
+                    'password.store',
+                    'password.confirm',
+                    'verification.send',
+                ]);
+        };
+
         return Inertia::render('Activity/Index', [
             'activities' => ActivityLog::query()
                 ->with('user:id,name,email,role')
@@ -44,6 +56,11 @@ class ActivityLogController extends Controller
                 ->distinct()
                 ->orderBy('action')
                 ->pluck('action'),
+            'stats' => [
+                'today_total'    => (clone ActivityLog::query())->where($baseScope)->count(),
+                'today_users'    => (clone ActivityLog::query())->where($baseScope)->whereNotNull('user_id')->distinct()->count('user_id'),
+                'today_failed'   => (clone ActivityLog::query())->where($baseScope)->whereJsonContains('metadata->hasil', 'gagal')->count(),
+            ],
         ]);
     }
 
@@ -122,19 +139,20 @@ class ActivityLogController extends Controller
     {
         $today = now()->setTimezone('Asia/Jakarta')->startOfDay();
 
-        $baseQuery = ActivityLog::query()
-            ->where('created_at', '>=', $today)
-            ->whereNotIn('route_name', [
-                'password.email',
-                'password.store',
-                'password.confirm',
-                'verification.send',
-            ]);
+        $baseScope = function ($query) use ($today) {
+            $query->where('created_at', '>=', $today)
+                ->whereNotIn('route_name', [
+                    'password.email',
+                    'password.store',
+                    'password.confirm',
+                    'verification.send',
+                ]);
+        };
 
         return response()->json([
-            'today_total'    => $baseQuery->cloneQuery()->count(),
-            'today_users'    => $baseQuery->cloneQuery()->whereNotNull('user_id')->distinct()->count('user_id'),
-            'today_failed'   => $baseQuery->cloneQuery()->whereJsonContains('metadata->hasil', 'gagal')->count(),
+            'today_total'    => (clone ActivityLog::query())->where($baseScope)->count(),
+            'today_users'    => (clone ActivityLog::query())->where($baseScope)->whereNotNull('user_id')->distinct()->count('user_id'),
+            'today_failed'   => (clone ActivityLog::query())->where($baseScope)->whereJsonContains('metadata->hasil', 'gagal')->count(),
         ]);
     }
 }

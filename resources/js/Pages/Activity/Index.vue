@@ -2,8 +2,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { useActivityLogLive } from '@/composables/useActivityLogLive';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import axios from 'axios';
+import { computed, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
     activities: {
@@ -292,15 +291,6 @@ onMounted(() => {
     const ids = props.activities.data.map((a) => a.id);
     initialMaxId.value = ids.length ? Math.max(...ids) : 0;
     resetNewEntries();
-    fetchStats();
-    // Refresh stats setiap 30 detik
-    window.__activityStatsTimer = setInterval(fetchStats, 30000);
-});
-
-onUnmounted(() => {
-    if (window.__activityStatsTimer) {
-        clearInterval(window.__activityStatsTimer);
-    }
 });
 
 // Saat filter apply → reset liveActivities agar hanya entry yang lolos filter
@@ -310,16 +300,7 @@ watch(hasActiveFilters, () => {
 });
 
 // ── Statistik ringkas hari ini ────────────────────────────────────────
-const stats = ref({ today_total: 0, today_users: 0, today_failed: 0 });
-
-const fetchStats = async () => {
-    try {
-        const { data } = await axios.get(route('activity.stats'));
-        stats.value = data;
-    } catch (err) {
-        console.warn('[activity-stats] fetch gagal:', err?.message || err);
-    }
-};
+const stats = ref(props.stats ?? { today_total: 0, today_users: 0, today_failed: 0 });
 
 const lastPolledLabel = computed(() => {
     if (!lastPolled.value) return '';
