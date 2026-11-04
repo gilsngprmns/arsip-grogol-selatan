@@ -13,9 +13,36 @@ const props = defineProps({
         type: Object,
         default: null,
     },
+    selectedIds: {
+        type: Array,
+        default: () => [],
+    },
 });
 
-const emit = defineEmits(['edit', 'view', 'label', 'pinjam', 'kembalikan', 'settersedia', 'tandahilang', 'delete']);
+const emit = defineEmits([
+    'edit', 'view', 'label', 'pinjam', 'kembalikan',
+    'settersedia', 'tandahilang', 'delete',
+    'toggle-row', 'select-all',
+]);
+
+const isAllSelected = computed(() => {
+    if (!props.rows.length) return false;
+    return props.rows.every((row) => props.selectedIds.includes(String(row.id)));
+});
+
+const isIndeterminate = computed(() => {
+    if (!props.rows.length) return false;
+    const count = props.rows.filter((row) => props.selectedIds.includes(String(row.id))).length;
+    return count > 0 && count < props.rows.length;
+});
+
+const toggleAll = () => {
+    emit('select-all', isAllSelected.value ? [] : props.rows.map((row) => String(row.id)));
+};
+
+const toggleRow = (id) => {
+    emit('toggle-row', id);
+};
 
 const totalLabel = computed(() => {
     if (!props.pagination) {
@@ -96,11 +123,18 @@ const pihak = (row) => {
                 <li
                     v-for="row in rows"
                     :key="`card-${row.id}`"
-                    class="px-4 py-4"
+                    class="flex items-start gap-3 px-4 py-4"
                 >
+                    <input
+                        type="checkbox"
+                        :value="String(row.id)"
+                        :checked="selectedIds.includes(String(row.id))"
+                        class="mt-2 h-4 w-4 shrink-0 rounded border-slate-300 text-brand-blue focus:ring-brand-blue/30 cursor-pointer"
+                        @change="toggleRow(String(row.id))"
+                    />
                     <button
                         type="button"
-                        class="w-full min-w-0 text-left"
+                        class="min-w-0 flex-1 text-left"
                         @click="emit('view', row)"
                     >
                         <div class="flex flex-wrap items-center gap-2">
@@ -165,6 +199,15 @@ const pihak = (row) => {
             <table class="w-full text-left text-sm">
                 <thead class="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
                     <tr>
+                        <th class="w-10 px-4 py-3">
+                            <input
+                                type="checkbox"
+                                :checked="isAllSelected"
+                                :indeterminate="isIndeterminate"
+                                class="h-4 w-4 rounded border-slate-300 text-brand-blue focus:ring-brand-blue/30 cursor-pointer"
+                                @change="toggleAll"
+                            />
+                        </th>
                         <th class="w-[140px] px-4 py-3 font-semibold">Kode Arsip</th>
                         <th class="flex-1 px-4 py-3 font-semibold">Informasi Surat</th>
                         <th class="w-[80px] px-4 py-3 font-semibold">Seksi</th>
@@ -180,6 +223,15 @@ const pihak = (row) => {
                         :key="row.id"
                         class="border-t border-slate-100 even:bg-slate-50/60"
                     >
+                        <td class="w-10 px-4 py-3 align-top">
+                            <input
+                                type="checkbox"
+                                :value="String(row.id)"
+                                :checked="selectedIds.includes(String(row.id))"
+                                class="h-4 w-4 rounded border-slate-300 text-brand-blue focus:ring-brand-blue/30 cursor-pointer"
+                                @change="toggleRow(String(row.id))"
+                            />
+                        </td>
                         <td class="w-[140px] px-4 py-3 align-top">
                             <button
                                 type="button"
@@ -245,7 +297,7 @@ const pihak = (row) => {
                         </td>
                     </tr>
                     <tr v-if="!rows.length">
-                        <td colspan="7">
+                        <td colspan="8">
                             <EmptyState
                                 title="Belum ada dokumen di daftar ini"
                                 description="Coba ubah filter pencarian, atau tambahkan arsip baru jika Anda memiliki wewenang."

@@ -51,7 +51,7 @@ class ArsipController extends Controller
      */
     public function exportCsv(Request $request): StreamedResponse
     {
-        $filename = 'arsip-'.now()->format('Ymd-His').'.csv';
+        $filename = 'arsip-dokumen-'.now()->format('YmdHis').'.csv';
         $query = $this->filteredQuery($request);
 
         return response()->streamDownload(function () use ($query) {
@@ -60,19 +60,19 @@ class ArsipController extends Controller
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
 
             fputcsv($handle, [
-                'kode_arsip',
-                'nomor_surat',
-                'perihal',
-                'jenis_surat',
-                'sifat_surat',
-                'tanggal_surat',
-                'tanggal_diterima',
-                'asal_instansi',
-                'tujuan_instansi',
-                'seksi',
-                'status_arsip',
-                'catatan',
-                'file_path',
+                'Kode Arsip',
+                'Nomor Surat',
+                'Perihal',
+                'Jenis Surat',
+                'Sifat Surat',
+                'Tanggal Surat',
+                'Tanggal Diterima',
+                'Asal Instansi',
+                'Tujuan Instansi',
+                'Seksi',
+                'Status Arsip',
+                'Catatan',
+                'File Path',
             ], ';');
 
             $query->chunk(200, function ($rows) use ($handle) {
@@ -98,6 +98,7 @@ class ArsipController extends Controller
             fclose($handle);
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.basename($filename).'"',
         ]);
     }
 
@@ -150,6 +151,8 @@ class ArsipController extends Controller
      */
     public function show(DokumenArsip $arsip): Response
     {
+        $this->assertDocumentAccess(request(), $arsip);
+
         $arsip->load([
             'seksi',
             'rak.lokasiArsip',
@@ -166,6 +169,8 @@ class ArsipController extends Controller
      */
     public function edit(DokumenArsip $arsip): Response
     {
+        $this->assertDocumentAccess(request(), $arsip);
+
         return Inertia::render('Arsip/Edit', [
             'arsip' => $arsip,
             'seksiList' => Seksi::orderByOrganisasi()->get(['id', 'nama_seksi']),
@@ -204,10 +209,51 @@ class ArsipController extends Controller
     }
 
     /**
+     * Ambil semua ID dokumen yang cocok dengan filter aktif (tanpa paginasi).
+     * Digunakan frontend untuk "Select All" melintasi seluruh halaman.
+     */
+    public function bulkSelectAll(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $ids = $this->filteredQuery($request)
+            ->withoutGlobalScopes()
+            ->whereNull('deleted_at')
+            ->pluck('id')
+            ->toArray();
+
+        return response()->json(['ids' => $ids]);
+    }
+
+    /**
+     * Hapus massal dokumen arsip (soft delete).
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:dokumen_arsip,id'],
+        ]);
+
+        $ids = array_map('intval', $request->input('ids'));
+
+        // Staff hanya boleh menghapus dokumen dari seksi yang dikelolanya; admin bebas.
+        // Gunakan filteredQuery agar scope sesuai, lalu limit ke ID yang diminta.
+        $query = $this->filteredQuery($request)
+            ->whereIn('id', $ids);
+
+        $affected = $query->delete();
+
+        return redirect()
+            ->route('arsip.index')
+            ->with('danger', "{$affected} dokumen arsip berhasil dihapus.");
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(DokumenArsip $arsip): RedirectResponse
     {
+        $this->assertDocumentAccess(request(), $arsip);
+
         $arsip->delete();
 
         return redirect()
@@ -220,6 +266,8 @@ class ArsipController extends Controller
      */
     public function forceDelete(DokumenArsip $arsip): RedirectResponse
     {
+        $this->assertDocumentAccess(request(), $arsip);
+
         $arsip->forceDelete();
 
         return redirect()
@@ -232,6 +280,8 @@ class ArsipController extends Controller
      */
     public function pinjam(Request $request, DokumenArsip $arsip): RedirectResponse
     {
+        $this->assertDocumentAccess($request, $arsip);
+
         $validated = $request->validate([
             'pihak_terkait' => ['required', 'string', 'max:150'],
             'keterangan' => ['nullable', 'string', 'max:1000'],
@@ -266,6 +316,8 @@ class ArsipController extends Controller
      */
     public function kembalikan(Request $request, DokumenArsip $arsip): RedirectResponse
     {
+        $this->assertDocumentAccess($request, $arsip);
+
         $validated = $request->validate([
             'keterangan' => ['nullable', 'string', 'max:1000'],
         ]);
@@ -299,6 +351,8 @@ class ArsipController extends Controller
      */
     public function settersedia(Request $request, DokumenArsip $arsip): RedirectResponse
     {
+        $this->assertDocumentAccess($request, $arsip);
+
         $validated = $request->validate([
             'keterangan' => ['nullable', 'string', 'max:1000'],
         ]);
@@ -332,6 +386,8 @@ class ArsipController extends Controller
      */
     public function tandahilang(Request $request, DokumenArsip $arsip): RedirectResponse
     {
+        $this->assertDocumentAccess($request, $arsip);
+
         $validated = $request->validate([
             'keterangan' => ['nullable', 'string', 'max:1000'],
         ]);
@@ -387,6 +443,15 @@ class ArsipController extends Controller
             );
         }
 
+        // Staff hanya boleh memindai dokumen dari seksi yang dikelolanya.
+        $user = $request->user();
+        if ($user->role !== 'admin' && (int) $arsip->seksi_id !== (int) $user->seksi_id) {
+            return response()->json(
+                ['message' => 'QR ini tidak termasuk seksi yang Anda kelola.'],
+                403,
+            );
+        }
+
         // Guard: jangan tulis record 'dipindai' ganda dalam 30 detik
         // untuk user + dokumen yang sama (kamera bisa re-scan cepat).
         $alreadyLogged = RiwayatSirkulasi::where('dokumen_arsip_id', $arsip->id)
@@ -409,9 +474,34 @@ class ArsipController extends Controller
         return response()->json($arsip);
     }
 
+    /**
+     * Proteksi akses untuk staff: dokumen harus milik seksi yang dikelola user.
+     * Admin tidak di-restrict. Dipanggil di setiap method yang menerima
+     * DokumenArsip via route-model-binding, sebelum operasi apa pun.
+     */
+    protected function assertDocumentAccess(Request $request, DokumenArsip $arsip): void
+    {
+        $user = $request->user();
+
+        if ($user->role === 'admin') {
+            return;
+        }
+
+        if ((int) $arsip->seksi_id !== (int) $user->seksi_id) {
+            abort(403, 'Anda hanya dapat mengakses dokumen pada seksi yang Anda kelola.');
+        }
+    }
+
     protected function filteredQuery(Request $request): Builder
     {
         $query = DokumenArsip::query()->with(['seksi', 'rak.lokasiArsip']);
+
+        $user = $request->user();
+
+        // Staff: auto-scope ke seksi yang dikelolanya, apapun parameter request.
+        if ($user->role !== 'admin') {
+            $query->where('seksi_id', $user->seksi_id);
+        }
 
         if ($request->filled('seksi_id')) {
             $query->where('seksi_id', $request->integer('seksi_id'));

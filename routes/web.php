@@ -265,6 +265,10 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::post('arsip/{arsip}/kembalikan', [ArsipController::class, 'kembalikan'])->name('arsip.kembalikan');
     Route::post('arsip/{arsip}/settersedia', [ArsipController::class, 'settersedia'])->name('arsip.settersedia');
     Route::post('arsip/{arsip}/tandahilang', [ArsipController::class, 'tandahilang'])->name('arsip.tandahilang');
+    Route::get('arsip/bulk-select-all', [ArsipController::class, 'bulkSelectAll'])
+        ->name('arsip.bulk-select-all');
+    Route::post('arsip/bulk-destroy', [ArsipController::class, 'bulkDestroy'])
+        ->name('arsip.bulk-destroy');
     Route::resource('arsip', ArsipController::class);
     Route::post('/api/arsip/scan', [ArsipController::class, 'scanByKode'])
         ->name('arsip.scan');
@@ -279,11 +283,6 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/api/activity-log/recent', [ActivityLogController::class, 'recent'])
             ->middleware('throttle:120,1')
             ->name('activity.log-recent');
-
-        // Ringkasan statistik hari ini — dipanggil frontend untuk kartu ringkas
-        Route::get('/api/activity-log/stats', [ActivityLogController::class, 'stats'])
-            ->middleware('throttle:120,1')
-            ->name('activity.stats');
 
         Route::post('arsip/{arsip}/force-delete', [ArsipController::class, 'forceDelete'])
             ->name('arsip.force-delete');

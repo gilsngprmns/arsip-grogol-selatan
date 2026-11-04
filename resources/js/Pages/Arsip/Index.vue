@@ -42,6 +42,13 @@ const flashSuccess = computed(() => page.props.flash?.success);
 const flashVisible = ref(false);
 let flashTimer = null;
 
+// Seksi yang dikelola user (staff). Admin = null (bebas memilih semua).
+const mySeksiId = computed(() => {
+    const u = page.props.auth?.user;
+    return u?.role !== 'admin' ? Number(u.seksi_id) : null;
+});
+const isSeksiOptionDisabled = (id) => mySeksiId.value !== null && Number(id) !== mySeksiId.value;
+
 watch(
     () => page.props.flash?.success,
     (v) => {
@@ -380,6 +387,71 @@ const confirmDeleteArsip = () => {
     });
 };
 
+// ── Bulk Delete ──────────────────────────────────────────────
+const selectedIds = ref([]);
+const showBulkDeleteModal = ref(false);
+
+const toggleRow = (id) => {
+    const idx = selectedIds.value.indexOf(id);
+    if (idx === -1) {
+        selectedIds.value.push(id);
+    } else {
+        selectedIds.value.splice(idx, 1);
+    }
+};
+
+const selectAll = async (ids) => {
+    if (ids.length > 0) {
+        // Memilih semua: fetch seluruh ID yang cocok filter dari backend
+        try {
+            const params = new URLSearchParams();
+            if (localFilters.value.seksi_id) params.set('seksi_id', localFilters.value.seksi_id);
+            if (localFilters.value.status && localFilters.value.status !== 'semua') {
+                params.set('status', localFilters.value.status);
+            }
+            if (localFilters.value.q) params.set('q', localFilters.value.q);
+            if (localFilters.value.tanggal_dari) params.set('tanggal_dari', localFilters.value.tanggal_dari);
+            if (localFilters.value.tanggal_sampai) params.set('tanggal_sampai', localFilters.value.tanggal_sampai);
+            if (localFilters.value.sort && localFilters.value.sort !== 'terbaru') {
+                params.set('sort', localFilters.value.sort);
+            }
+            if (localFilters.value.tanpa_lokasi) params.set('tanpa_lokasi', '1');
+            if (localFilters.value.terlambat) params.set('terlambat', '1');
+            if (localFilters.value.tanpa_file) params.set('tanpa_file', '1');
+            if (localFilters.value.metadata_kosong) params.set('metadata_kosong', '1');
+            if (localFilters.value.tanpa_qr) params.set('tanpa_qr', '1');
+
+            const query = params.toString();
+            const resp = await fetch(route('arsip.bulk-select-all') + (query ? `?${query}` : ''));
+            const data = await resp.json();
+            selectedIds.value = data.ids.map(String);
+        } catch {
+            // fallback: gunakan ID dari halaman saat ini
+            selectedIds.value = props.rows.map((row) => String(row.id));
+        }
+    } else {
+        selectedIds.value = [];
+    }
+};
+
+const bulkDelete = () => {
+    showBulkDeleteModal.value = true;
+};
+
+const confirmBulkDelete = () => {
+    router.post(
+        route('arsip.bulk-destroy'),
+        { ids: selectedIds.value.map((id) => Number(id)) },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                showBulkDeleteModal.value = false;
+                selectedIds.value = [];
+            },
+        },
+    );
+};
+
 const onSlashFocus = (event) => {
     if (event.key !== '/') return;
     const tag = event.target?.tagName?.toLowerCase();
@@ -434,22 +506,29 @@ onUnmounted(() => {
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <button
+                        v-if="selectedIds.length > 0"
+                        type="button"
+                        class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 sm:flex-none"
+                        @click="bulkDelete"
+                    >
+                        <AppIcon name="trash" :size="16" :stroke-width="2" decorative />
+                        Hapus {{ selectedIds.length }} Terpilih
+                    </button>
+                    <button
                         type="button"
                         class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-sm hover:bg-slate-50 sm:flex-none"
                         title="Unduh daftar sesuai filter aktif"
                         @click="exportCsv"
                     >
-                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-4-4m4 4l4-4" />
-                        </svg>
+                        <AppIcon name="download" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
                         Ekspor CSV
                     </button>
                     <Link
                         :href="route('arsip.create')"
                         class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 sm:flex-none"
                     >
-                        <span class="text-lg leading-none">+</span>
-                        Rekam Berkas Baru
+                        <AppIcon name="file-plus" :size="16" :stroke-width="2" decorative />
+                        Tambah Dokumen
                     </Link>
                 </div>
             </div>
@@ -469,19 +548,16 @@ onUnmounted(() => {
             {{ flashDanger }}
         </div>
 
-        <div class="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div v-reveal class="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
-                <div class="relative min-w-0 flex-1 basis-[220px]">
-                    <svg
-                        viewBox="0 0 24 24"
+                <div class="relative min-w-0 flex-1">
+                    <AppIcon
+                        name="search"
+                        :size="16"
+                        :stroke-width="1.8"
                         class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                    >
-                        <circle cx="11" cy="11" r="7" />
-                        <path stroke-linecap="round" d="M20 20l-3-3" />
-                    </svg>
+                        decorative
+                    />
                     <input
                         ref="searchInput"
                         v-model="localFilters.q"
@@ -493,10 +569,10 @@ onUnmounted(() => {
                     />
                 </div>
 
-                <div class="flex items-center gap-2 lg:flex-nowrap">
+                <div class="flex flex-wrap items-center gap-2">
                     <select
                         v-model="localFilters.status"
-                        class="h-10 min-w-[112px] shrink-0 rounded-lg border border-slate-300 pl-3 pr-9 text-[13px] shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/30"
+                        class="h-10 min-w-0 flex-1 rounded-lg border border-slate-300 pl-3 pr-9 text-[13px] shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/30"
                         @change="applyFilters"
                     >
                         <option value="semua">Semua Status</option>
@@ -505,25 +581,25 @@ onUnmounted(() => {
                         <option value="hilang">Hilang</option>
                     </select>
 
-                    <div class="flex items-center gap-1 shrink-0">
+                    <div class="flex items-center gap-1 w-full sm:w-auto">
                         <input
                             v-model="localFilters.tanggal_dari"
                             type="date"
-                            class="h-10 w-[124px] rounded-lg border border-slate-300 px-2.5 text-[13px] shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/30"
+                            class="h-10 flex-1 min-w-0 rounded-lg border border-slate-300 px-2.5 text-[13px] shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/30"
                             @change="applyFilters"
                         />
                         <span class="text-xs font-medium text-slate-400">s/d</span>
                         <input
                             v-model="localFilters.tanggal_sampai"
                             type="date"
-                            class="h-10 w-[124px] rounded-lg border border-slate-300 px-2.5 text-[13px] shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/30"
+                            class="h-10 flex-1 min-w-0 rounded-lg border border-slate-300 px-2.5 text-[13px] shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/30"
                             @change="applyFilters"
                         />
                     </div>
 
                     <select
                         v-model="localFilters.sort"
-                        class="h-10 min-w-[130px] shrink-0 rounded-lg border border-slate-300 pl-3 pr-9 text-[13px] shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/30"
+                        class="h-10 min-w-0 flex-1 rounded-lg border border-slate-300 pl-3 pr-9 text-[13px] shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/30"
                         @change="applyFilters"
                     >
                         <option value="terbaru">Terbaru</option>
@@ -532,16 +608,14 @@ onUnmounted(() => {
                         <option value="batas">Batas kembali</option>
                     </select>
 
-                    <div class="relative shrink-0">
+                    <div class="relative shrink-0 sm:flex-shrink">
                         <button
                             type="button"
                             class="inline-flex h-10 items-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-3 text-[13px] font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/30"
                             :class="hasOperationalFilter ? 'border-amber-300 bg-amber-50 text-amber-800' : ''"
                             @click="opFilterOpen = !opFilterOpen"
                         >
-                            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16M7 12h10M10 19h4" />
-                            </svg>
+                            <AppIcon name="filter" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
                             Filter operasional
                             <span
                                 v-if="activeOperationalCount > 0"
@@ -549,9 +623,7 @@ onUnmounted(() => {
                             >
                                 {{ activeOperationalCount }}
                             </span>
-                            <svg viewBox="0 0 24 24" class="ml-1 h-4 w-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
-                            </svg>
+                            <AppIcon name="chevron-down" :size="16" :stroke-width="2" class="ml-1 h-4 w-4 shrink-0 text-slate-400" decorative />
                         </button>
 
                         <template v-if="opFilterOpen">
@@ -560,7 +632,7 @@ onUnmounted(() => {
                                 @click="opFilterOpen = false"
                             ></div>
                             <div
-                                class="absolute left-0 z-50 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
+                                class="absolute left-0 right-0 sm:left-auto sm:right-0 z-50 mt-2 w-full sm:w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
                             >
                                 <p class="px-2 py-1 text-xs font-semibold text-slate-500">Pilih filter (bisa lebih dari satu)</p>
                                 <label
@@ -615,18 +687,23 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <ArsipTable
-            :rows="arsip.data"
-            :pagination="arsip"
-            @edit="openEdit"
-            @view="openView"
-            @label="openLabel"
-            @pinjam="openPinjam"
-            @kembalikan="openKembalikan"
-            @settersedia="openSettersedia"
-            @tandahilang="openTandahilang"
-            @delete="deleteFromDetail"
-        />
+        <div v-reveal :style="{ transitionDelay: '100ms' }">
+            <ArsipTable
+                :rows="arsip.data"
+                :pagination="arsip"
+                :selected-ids="selectedIds"
+                @toggle-row="toggleRow"
+                @select-all="selectAll"
+                @edit="openEdit"
+                @view="openView"
+                @label="openLabel"
+                @pinjam="openPinjam"
+                @kembalikan="openKembalikan"
+                @settersedia="openSettersedia"
+                @tandahilang="openTandahilang"
+                @delete="deleteFromDetail"
+            />
+        </div>
     </AppLayout>
 
     <ArsipFormModal
@@ -670,6 +747,15 @@ onUnmounted(() => {
         confirm-label="Hapus"
         @close="showDeleteModal = false"
         @confirm="confirmDeleteArsip"
+    />
+
+    <ConfirmModal
+        :show="showBulkDeleteModal"
+        title="Hapus Massal"
+        :message="`Apakah Anda yakin ingin menghapus ${selectedIds.length} arsip yang dipilih? Tindakan ini tidak dapat dibatalkan.`"
+        confirm-label="Hapus"
+        @close="showBulkDeleteModal = false"
+        @confirm="confirmBulkDelete"
     />
 
     <Modal :show="showSettersediaModal" max-width="md" @close="showSettersediaModal = false">
