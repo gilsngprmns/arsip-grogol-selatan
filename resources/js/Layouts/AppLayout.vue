@@ -2,6 +2,7 @@
 import Sidebar from '@/Components/Sidebar.vue';
 import StafOnlineToast from '@/Components/StafOnlineToast.vue';
 import { useStafOnline } from '@/composables/useStafOnline';
+import { useAutoLogout } from '@/composables/useAutoLogout';
 import { institution } from '@/config/institution';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
@@ -15,6 +16,9 @@ defineProps({
 
 const page = usePage();
 const isAdmin = computed(() => page.props.auth?.user?.role === 'admin');
+
+/* ============ Auto-logout karena inaktivitas (15 menit) ============ */
+useAutoLogout();
 
 /* ============ Notifikasi staf online (admin-only) ============ */
 const stafToast = ref(null);
