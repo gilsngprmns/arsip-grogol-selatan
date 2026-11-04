@@ -3,6 +3,12 @@
 Catatan perbaikan bug terverifikasi. Entri baru ditambahkan di ATAS (terbaru → terlama).
 
 <!-- ENTRI BARU DI BAWAH BARIS INI -->
+### Fix #104 — Audit keamanan placeholder: hapus teks sensitif yang membocorkan skema internal
+
+| Tanggal | File | Masalah | Akar | Fix | Verifikasi | Pelajaran | Log Keyword | Deploy |
+|---|---|---|---|---|---|---|---|---|
+| 2026-11-04 | `resources/js/Pages/Users/Index.vue`, `resources/js/Pages/Arsip/Index.vue`, `resources/js/Components/ArsipFormModal.vue`, `resources/js/Pages/Arsip/Create.vue`, `resources/js/Pages/Arsip/Edit.vue`, `resources/js/Components/LokasiEditModal.vue`, `resources/js/Components/RakEditModal.vue`, `resources/js/Pages/Rak/Index.vue` | Placeholder pada form-form aplikasi membocorkan informasi sensitif: domain email pemerintah (@grogolselatan.go.id), skema penamaan kode arsip (PEM-001/2026, RKYT-002), nama instansi nyata (Kecamatan Kebayoran Lama, Kelurahan Grogol Selatan), bahasa operasional internal (ditemukan kembali di rak PEM-3), dan sistem penyimpanan fisik (B-01/Box-A, Map Merah 01). | Placeholder ditambahkan secara seragam tanpa filter keamanan — semua contoh mengandung data internal yang bisa dimanfaatkan attacker untuk enumerasi dan social engineering. | (1) RISIKO TINGGI: Hapus placeholder email domain nyata, ganti dengan @example.com. Hapus 2 placeholder bahasa operasional internal di Arsip/Index.vue. (2) RISIKO SEDANG: Ganti 18+ placeholder di ArsipFormModal, Arsip/Create, Arsip/Edit, LokasiEditModal, RakEditModal, Rak/Index dengan contoh generik (ARS-001, 001/DSK/2026, Nama Instansi, dll) tanpa skema internal. | `npm run build` → **✓ built in 44.86s**. `php artisan test` → **122 passed** (599 assertions). | Placeholder adalah teks publik yang terlihat oleh semua user termasuk attacker — jangan gunakan contoh yang mengungkap skema penamaan, nama entitas nyata, atau bahasa operasional internal. Gunakan contoh generik yang tidak informatif. | `placeholder security audit infoleak internal schema operational language` | ✅ LIVE 2026-11-04 — build success, 122 tests passed. |
+
 ### Fix #103 — Hapus placeholder pada field password sensitif (Users/Index, DeleteUserForm)
 
 | Tanggal | File | Masalah | Akar | Fix | Verifikasi | Pelajaran | Log Keyword | Deploy |
