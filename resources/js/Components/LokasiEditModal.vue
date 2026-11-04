@@ -125,9 +125,7 @@ const submit = () => {
                     @click="close"
                 >
                     <span class="sr-only">Tutup</span>
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
-                    </svg>
+                    <AppIcon name="close" :size="20" :stroke-width="2" class="h-5 w-5" decorative />
                 </button>
             </div>
         </div>
@@ -142,6 +140,7 @@ const submit = () => {
                         type="text"
                         class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                         required
+                        placeholder="Contoh: LOK-001"
                     />
                     <InputError class="mt-1" :message="errors.kode_lokasi" />
                 </div>
@@ -154,6 +153,7 @@ const submit = () => {
                         type="text"
                         class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                         required
+                        placeholder="Contoh: Gedung A Lantai 2"
                     />
                     <InputError class="mt-1" :message="errors.nama_lokasi" />
                 </div>
@@ -167,6 +167,7 @@ const submit = () => {
                         v-model="form.gedung"
                         type="text"
                         class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
+                        placeholder="Contoh: Gedung Utama"
                     />
                     <InputError class="mt-1" :message="errors.gedung" />
                 </div>
@@ -178,6 +179,7 @@ const submit = () => {
                         v-model="form.lantai"
                         type="text"
                         class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
+                        placeholder="Contoh: Lantai 1 atau Basement"
                     />
                     <InputError class="mt-1" :message="errors.lantai" />
                 </div>
@@ -189,6 +191,7 @@ const submit = () => {
                         v-model="form.ruangan"
                         type="text"
                         class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
+                        placeholder="Contoh: Ruang Kerja"
                     />
                     <InputError class="mt-1" :message="errors.ruangan" />
                 </div>
@@ -201,6 +204,7 @@ const submit = () => {
                     v-model="form.deskripsi"
                     rows="3"
                     class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
+                    placeholder="Tambahkan detail lokasi (opsional)..."
                 ></textarea>
                 <InputError class="mt-1" :message="errors.deskripsi" />
             </div>

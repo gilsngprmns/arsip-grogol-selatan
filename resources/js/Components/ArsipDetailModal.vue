@@ -81,9 +81,7 @@ const seksiCode = computed(() => {
                         <p class="mt-1 font-medium text-slate-600">{{ arsip.kode_arsip }}</p>
                     </div>
                     <button type="button" class="shrink-0 rounded-md p-1 text-slate-400 hover:bg-slate-100" @click="emit('close')">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
-                        </svg>
+                        <AppIcon name="close" :size="20" :stroke-width="2" class="h-5 w-5" decorative />
                     </button>
                 </div>
             </div>
@@ -114,9 +112,7 @@ const seksiCode = computed(() => {
 
                 <div>
                     <h3 class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" />
-                        </svg>
+                        <AppIcon name="file" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
                         Lampiran Salinan Scan Dokumen
                     </h3>
                     <div

@@ -42,6 +42,14 @@ const resolvedSeksiList = computed(() => {
     return page.props.seksiList ?? [];
 });
 
+// Seksi yang dikelola user (staff). Admin = null (bebas memilih semua).
+const mySeksiId = computed(() => {
+    const u = page.props.auth?.user;
+    return u?.role !== 'admin' ? Number(u.seksi_id) : null;
+});
+
+const isSeksiOptionDisabled = (id) => mySeksiId.value !== null && Number(id) !== mySeksiId.value;
+
 const emptyForm = () => ({
     kode_arsip: '',
     nomor_surat: '',
@@ -53,7 +61,7 @@ const emptyForm = () => ({
     tanggal_diterima: '',
     asal_instansi: '',
     tujuan_instansi: '',
-    seksi_id: resolvedSeksiList.value[0]?.id ?? '',
+    seksi_id: mySeksiId.value ? String(mySeksiId.value) : (resolvedSeksiList.value[0]?.id ?? ''),
     rak_id: '',
     nomor_box: '',
     nomor_map: '',
@@ -176,9 +184,7 @@ const submit = () => {
                 <h2 class="text-lg font-bold text-slate-800">{{ title }}</h2>
                 <button type="button" class="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600" @click="close">
                     <span class="sr-only">Tutup</span>
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
-                    </svg>
+                    <AppIcon name="close" :size="20" :stroke-width="2" class="h-5 w-5" decorative />
                 </button>
             </div>
         </div>
@@ -192,7 +198,12 @@ const submit = () => {
                     class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
                     required
                 >
-                    <option v-for="seksi in resolvedSeksiList" :key="seksi.id" :value="seksi.id">
+                    <option
+                        v-for="seksi in resolvedSeksiList"
+                        :key="seksi.id"
+                        :value="seksi.id"
+                        :disabled="isSeksiOptionDisabled(seksi.id)"
+                    >
                         {{ seksi.nama_seksi }}
                     </option>
                 </select>
@@ -221,7 +232,7 @@ const submit = () => {
                         id="kode_arsip"
                         v-model="form.kode_arsip"
                         class="mt-1 block w-full"
-                        placeholder="Contoh: PEM-01-2026-0001"
+                        placeholder="Contoh: ARS-001"
                         required
                     />
                     <InputError class="mt-1" :message="form.errors.kode_arsip" />
@@ -247,7 +258,7 @@ const submit = () => {
                         id="nomor_surat"
                         v-model="form.nomor_surat"
                         class="mt-1 block w-full"
-                        placeholder="Contoh: 140/GS/2026"
+                        placeholder="Contoh: 001/DSK/2026"
                         required
                     />
                     <InputError class="mt-1" :message="form.errors.nomor_surat" />
@@ -298,7 +309,7 @@ const submit = () => {
                     id="asal_instansi"
                     v-model="form.asal_instansi"
                     class="mt-1 block w-full"
-                    placeholder="Nama warga atau lembaga"
+                    placeholder="Contoh: Nama Instansi"
                 />
                 <InputError class="mt-1" :message="form.errors.asal_instansi" />
             </div>
@@ -309,7 +320,7 @@ const submit = () => {
                     id="tujuan_instansi"
                     v-model="form.tujuan_instansi"
                     class="mt-1 block w-full"
-                    placeholder="Tujuan surat keluar"
+                    placeholder="Contoh: Nama Instansi"
                 />
                 <InputError class="mt-1" :message="form.errors.tujuan_instansi" />
             </div>
@@ -321,7 +332,7 @@ const submit = () => {
                     v-model="form.perihal"
                     rows="3"
                     class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
-                    placeholder="Keterangan isi berkas..."
+                    placeholder="Contoh: Surat Masuk atau Surat Keluar"
                     required
                 />
                 <InputError class="mt-1" :message="form.errors.perihal" />
@@ -342,15 +353,15 @@ const submit = () => {
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                     <InputLabel for="nomor_box" value="Nomor Box" />
-                    <TextInput id="nomor_box" v-model="form.nomor_box" class="mt-1 block w-full" />
+                    <TextInput id="nomor_box" v-model="form.nomor_box" class="mt-1 block w-full" placeholder="Contoh: B-01" />
                 </div>
                 <div>
                     <InputLabel for="nomor_map" value="Nomor Map" />
-                    <TextInput id="nomor_map" v-model="form.nomor_map" class="mt-1 block w-full" />
+                    <TextInput id="nomor_map" v-model="form.nomor_map" class="mt-1 block w-full" placeholder="Contoh: Map 01" />
                 </div>
                 <div>
                     <InputLabel for="nomor_slot" value="Nomor Slot" />
-                    <TextInput id="nomor_slot" v-model="form.nomor_slot" class="mt-1 block w-full" />
+                    <TextInput id="nomor_slot" v-model="form.nomor_slot" class="mt-1 block w-full" placeholder="Contoh: S-01" />
                 </div>
             </div>
 
@@ -360,7 +371,7 @@ const submit = () => {
                     id="catatan"
                     v-model="form.catatan"
                     class="mt-1 block w-full"
-                    placeholder="Contoh: Lemari A - Box PEM-03"
+                    placeholder="Tambahkan catatan khusus mengenai dokumen ini (opsional)..."
                 />
                 <InputError class="mt-1" :message="form.errors.catatan" />
             </div>

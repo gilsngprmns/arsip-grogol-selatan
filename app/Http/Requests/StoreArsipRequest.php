@@ -12,7 +12,13 @@ class StoreArsipRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+
+        if ($user->role === 'admin') {
+            return true;
+        }
+
+        return (int) $this->input('seksi_id') === (int) $user->seksi_id;
     }
 
     /**

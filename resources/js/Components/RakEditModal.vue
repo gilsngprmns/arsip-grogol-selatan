@@ -39,6 +39,12 @@ const title = computed(() =>
     props.mode === 'edit' ? 'Perbarui Rak Arsip' : 'Tambah Rak Arsip',
 );
 
+// Truncate long option labels so they fit the dropdown button width
+const truncateOption = (text, maxChars = 28) => {
+    const s = String(text ?? '');
+    return s.length > maxChars ? s.slice(0, maxChars - 1) + '…' : s;
+};
+
 const emptyForm = () => ({
     lokasi_id: '',
     seksi_id: '',
@@ -126,9 +132,9 @@ const submit = () => {
 </script>
 
 <template>
-    <Modal :show="show" max-width="lg" @close="close">
+    <Modal :show="show" max-width="2xl" @close="close">
         <div class="border-b border-slate-100 px-6 py-4">
-            <div class="flex items-start justify-between gap-4">
+            <div class="flex items-center justify-between gap-4">
                 <h2 class="text-lg font-bold text-slate-800">{{ title }}</h2>
                 <button
                     type="button"
@@ -136,16 +142,14 @@ const submit = () => {
                     @click="close"
                 >
                     <span class="sr-only">Tutup</span>
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
-                    </svg>
+                    <AppIcon name="close" :size="20" :stroke-width="2" class="h-5 w-5" decorative />
                 </button>
             </div>
         </div>
 
-        <form class="space-y-4 px-6 py-5" @submit.prevent="submit">
+        <form class="space-y-4 px-6 py-5 max-h-[75vh] overflow-y-auto rounded-lg" @submit.prevent="submit">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
+                <div class="min-w-0">
                     <InputLabel for="lokasi_id" value="Lokasi *" />
                     <select
                         id="lokasi_id"
@@ -155,13 +159,13 @@ const submit = () => {
                     >
                         <option value="">Pilih lokasi</option>
                         <option v-for="lokasi in lokasiList" :key="lokasi.id" :value="lokasi.id">
-                            {{ lokasi.nama_lokasi }} ({{ lokasi.kode_lokasi }})
+                            {{ truncateOption(lokasi.nama_lokasi + ' (' + lokasi.kode_lokasi + ')') }}
                         </option>
                     </select>
                     <InputError class="mt-1" :message="errors.lokasi_id" />
                 </div>
 
-                <div>
+                <div class="min-w-0">
                     <InputLabel for="seksi_id" value="Seksi Pemilik *" />
                     <select
                         id="seksi_id"
@@ -171,7 +175,7 @@ const submit = () => {
                     >
                         <option value="">Pilih seksi</option>
                         <option v-for="seksi in seksiList" :key="seksi.id" :value="seksi.id">
-                            {{ seksi.nama_seksi }}
+                            {{ truncateOption(seksi.nama_seksi) }}
                         </option>
                     </select>
                     <InputError class="mt-1" :message="errors.seksi_id" />
@@ -179,25 +183,25 @@ const submit = () => {
             </div>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
+                <div class="min-w-0">
                     <InputLabel for="kode_rak" value="Kode Rak *" />
                     <TextInput
                         id="kode_rak"
                         v-model="form.kode_rak"
                         class="mt-1 block w-full"
-                        placeholder="mis. RAK-PEM-01"
+                        placeholder="Contoh: RAK-001"
                         required
                     />
                     <InputError class="mt-1" :message="errors.kode_rak" />
                 </div>
 
-                <div>
+                <div class="min-w-0">
                     <InputLabel for="nama_rak" value="Nama Rak *" />
                     <TextInput
                         id="nama_rak"
                         v-model="form.nama_rak"
                         class="mt-1 block w-full"
-                        placeholder="mis. Rak No. 1 Seksi Pemerintahan"
+                        placeholder="Contoh: Rak Arsip No. 1"
                         required
                     />
                     <InputError class="mt-1" :message="errors.nama_rak" />
@@ -205,7 +209,7 @@ const submit = () => {
             </div>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
+                <div class="min-w-0">
                     <InputLabel for="nomor_rak" value="Nomor Rak" />
                     <TextInput
                         id="nomor_rak"
@@ -216,7 +220,7 @@ const submit = () => {
                     <InputError class="mt-1" :message="errors.nomor_rak" />
                 </div>
 
-                <div>
+                <div class="min-w-0">
                     <InputLabel for="kapasitas" value="Kapasitas" />
                     <input
                         id="kapasitas"
@@ -224,6 +228,7 @@ const submit = () => {
                         type="number"
                         min="1"
                         class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
+                        placeholder="Contoh: 50 atau 100"
                     />
                     <InputError class="mt-1" :message="errors.kapasitas" />
                 </div>

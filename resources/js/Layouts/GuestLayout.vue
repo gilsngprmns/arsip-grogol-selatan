@@ -74,33 +74,35 @@ const closeLogoLightbox = () => {
             <!-- Sidebar kiri — asli -->
             <aside v-else class="relative hidden overflow-hidden bg-brand-navy px-10 py-10 text-white lg:flex lg:flex-col lg:justify-between xl:px-16">
                 <div class="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:34px_34px]" />
-                <div class="relative">
-                    <div class="inline-flex items-center gap-3">
-                        <button
-                            type="button"
-                            class="h-11 w-11 shrink-0 rounded-xl bg-white p-0.5 transition-colors hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy"
-                            :aria-label="`Perbesar logo ${institution.name}`"
-                            @click="openLogoLightbox()"
-                        >
-                            <img
-                                :src="institution.logoPath"
-                                :alt="`Logo ${institution.name}`"
-                                class="h-full w-full rounded-xl object-contain"
-                            />
-                        </button>
-                        <Link
-                            href="/"
-                            class="rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy"
-                        >
-                            <span>
-                                <span class="block text-sm font-bold tracking-tight">{{ institution.systemName }}</span>
-                                <span class="block text-xs text-blue-200">{{ institution.name }}</span>
-                            </span>
-                        </Link>
+                <div class="relative flex flex-col items-start gap-3">
+                    <div v-reveal class="relative">
+                        <div class="inline-flex items-center gap-3">
+                            <button
+                                type="button"
+                                class="h-11 w-11 shrink-0 rounded-xl bg-white p-0.5 transition-colors hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy"
+                                :aria-label="`Perbesar logo ${institution.name}`"
+                                @click="openLogoLightbox()"
+                            >
+                                <img
+                                    :src="institution.logoPath"
+                                    :alt="`Logo ${institution.name}`"
+                                    class="h-full w-full rounded-xl object-contain"
+                                />
+                            </button>
+                            <Link
+                                href="/"
+                                class="rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-navy"
+                            >
+                                <span>
+                                    <span class="block text-sm font-bold tracking-tight">{{ institution.headerTitle }}</span>
+                                    <span class="block text-xs text-blue-200">{{ institution.headerSubtitle }}</span>
+                                </span>
+                            </Link>
+                        </div>
                     </div>
                 </div>
 
-                <div class="relative max-w-md">
+                <div v-reveal :style="{ transitionDelay: '120ms' }" class="relative max-w-md">
                     <p class="mb-4 text-sm font-medium text-blue-200">{{ institution.accessNotice }}</p>
                     <h1 class="text-xl font-semibold leading-tight tracking-tight xl:text-2xl">
                         {{ institution.fullTitle }}
@@ -110,7 +112,7 @@ const closeLogoLightbox = () => {
                     </p>
                 </div>
 
-                <div class="relative text-xs leading-5 text-slate-400">
+                <div v-reveal :style="{ transitionDelay: '240ms' }" class="relative text-xs leading-5 text-slate-400">
                     <p>{{ institution.identityLine }}</p>
                     <p class="mt-2">Jam pelayanan: {{ institution.officeHours }}</p>
                 </div>
@@ -149,7 +151,7 @@ const closeLogoLightbox = () => {
                         Beranda
                     </Link>
                 </div>
-                <div class="flex flex-1 items-center justify-center py-10">
+                <div v-reveal :style="{ transitionDelay: '100ms' }" class="flex flex-1 items-center justify-center py-10">
                     <div class="w-full max-w-md">
                         <div class="mb-8 flex items-center gap-3 lg:hidden">
                             <button
@@ -169,8 +171,8 @@ const closeLogoLightbox = () => {
                                 class="rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue/40"
                             >
                                 <span>
-                                    <span class="block text-sm font-bold tracking-tight text-brand-navy">{{ institution.systemName }}</span>
-                                    <span class="block text-xs text-slate-500">{{ institution.name }}</span>
+                                    <span class="block text-sm font-bold tracking-tight text-brand-navy">{{ institution.headerTitle }}</span>
+                                    <span class="block text-xs text-slate-500">{{ institution.headerSubtitle }}</span>
                                 </span>
                             </Link>
                         </div>

@@ -47,14 +47,36 @@ class HandleInertiaRequests extends Middleware
             'seksiList' => fn () => $request->user()
                 ? Seksi::query()->select('id', 'nama_seksi')->orderByOrganisasi()->get()
                 : [],
-            'seksiCounts' => fn () => $request->user()
-                ? [
-                    'all' => DokumenArsip::count(),
-                    'by_seksi' => Seksi::query()
-                        ->withCount('dokumenArsip')
-                        ->pluck('dokumen_arsip_count', 'id'),
-                ]
-                : ['all' => 0, 'by_seksi' => []],
+            // Seksi yang dikelola user (staff); null untuk admin.
+            'userSeksi' => fn () => $request->user()
+                ? ($request->user()->role !== 'admin'
+                    ? Seksi::whereKey($request->user()->seksi_id)->first(['id', 'nama_seksi'])
+                    : null)
+                : null,
+            // Count dokumen: admin lihat global, staff hanya dokumen seksi miliknya.
+            'seksiCounts' => function () use ($request) {
+                if (! $request->user()) {
+                    return ['all' => 0, 'by_seksi' => []];
+                }
+
+                $user = $request->user();
+
+                if ($user->role === 'admin') {
+                    return [
+                        'all' => DokumenArsip::count(),
+                        'by_seksi' => Seksi::query()
+                            ->withCount('dokumenArsip')
+                            ->pluck('dokumen_arsip_count', 'id'),
+                    ];
+                }
+
+                return [
+                    'all' => DokumenArsip::where('seksi_id', $user->seksi_id)->count(),
+                    'by_seksi' => [
+                        $user->seksi_id => DokumenArsip::where('seksi_id', $user->seksi_id)->count(),
+                    ],
+                ];
+            },
         ];
     }
 }

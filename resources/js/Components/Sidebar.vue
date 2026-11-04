@@ -30,6 +30,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'navigate', 'toggle-collapse']);
 
 const setExpanded = ref(false);
+const publikExpanded = ref(false);
 
 watch(
     () => props.activeSeksiId,
@@ -47,11 +48,51 @@ const seksiList = computed(() => page.props.seksiList ?? []);
 const seksiCounts = computed(() => page.props.seksiCounts ?? { all: 0, by_seksi: {} });
 const userName = computed(() => page.props.auth?.user?.name ?? 'Staf Pengarsipan');
 const isAdmin = computed(() => page.props.auth?.user?.role === 'admin');
+
+// Seksi yang dikelola user (staff). Admin = null (tidak dibatasi).
+const userSeksiId = computed(() => {
+    const u = page.props.auth?.user;
+    return u?.role !== 'admin' ? Number(u.seksi_id) : null;
+});
+
+const isSeksiDisabled = (id) => userSeksiId.value !== null && Number(id) !== userSeksiId.value;
 // Avatar user (storage). Kosong = fallback SVG; tombol avatar hanya muncul saat ada foto.
 const avatarSrc = computed(() => {
     const p = page.props.auth?.user?.avatar_path;
     return p ? `/storage/${p}` : '';
 });
+
+// Sidebar desktop TIDAK di-remount saat navigasi (AppLayout tak memberi :key),
+// jadi state dropdown bertahan antar halaman. Auto-buka dropdown bila route
+// saat ini adalah salah satu sub-item-nya — jadi item aktif selalu terlihat.
+watch(
+    () => page.url,
+    () => {
+        if (route().current('halaman-publik.*')) {
+            publikExpanded.value = true;
+        }
+        if (route().current('arsip.index') && props.activeSeksiId) {
+            setExpanded.value = true;
+        }
+    },
+    { immediate: true },
+);
+
+// Transisi tinggi (height) sub-list: v-show saja terasa instan; ukur tinggi
+// lalu transition agar buka/tutup halus (~300ms, sinkron dgn chevron).
+const enterHooks = (el, done) => {
+    el.style.height = el.scrollHeight + 'px';
+    el.offsetHeight; // reflow
+    el.style.height = 'auto';
+    requestAnimationFrame(done);
+};
+
+const leaveHooks = (el, done) => {
+    el.style.height = el.scrollHeight + 'px';
+    el.offsetHeight;
+    el.style.height = '0px';
+    setTimeout(done, 240);
+};
 
 const seksiMeta = (nama) => {
     const lower = (nama || '').toLowerCase();
@@ -268,9 +309,7 @@ onBeforeUnmount(() => {
                     aria-label="Tutup menu"
                     @click="emit('close')"
                 >
-                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                        <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
-                    </svg>
+                    <AppIcon name="close" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
                 </button>
                 <button
                     v-else-if="collapsible"
@@ -286,16 +325,13 @@ onBeforeUnmount(() => {
                     @blur="hideTip()"
                     @click="emit('toggle-collapse')"
                 >
-                    <svg
-                        viewBox="0 0 24 24"
-                        class="h-4 w-4 transition-transform duration-300"
-                        :class="collapsed ? 'rotate-180' : ''"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 6l-6 6 6 6" />
-                    </svg>
+                    <AppIcon
+                        name="chevron-left"
+                        :size="16"
+                        :stroke-width="1.8"
+                        :class="['h-4 w-4 transition-transform duration-300', collapsed ? 'rotate-180' : '']"
+                        decorative
+                    />
                 </button>
             </div>
         </div>
@@ -333,16 +369,13 @@ onBeforeUnmount(() => {
                     @blur="hideTip()"
                     @click="onNavClick"
                 >
-                    <svg
-                        viewBox="0 0 24 24"
-                        class="h-5 w-5 shrink-0"
-                        :class="route().current('dashboard') ? 'text-emerald-400' : 'text-slate-400'"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 13h6V4H4v9zm10 7h6v-9h-6v9zM4 20h6v-3H4v3zm10-12h6V4h-6v4z" />
-                    </svg>
+                    <AppIcon
+                        name="dashboard"
+                        :size="20"
+                        :stroke-width="1.8"
+                        :class="['h-5 w-5 shrink-0', route().current('dashboard') ? 'text-emerald-400' : 'text-slate-400']"
+                        decorative
+                    />
                     <span v-show="!collapsed" class="truncate">Dashboard</span>
                 </Link>
 
@@ -366,18 +399,13 @@ onBeforeUnmount(() => {
                         @click="onNavClick"
                     >
                         <span class="flex min-w-0 items-center" :class="collapsed ? '' : 'gap-2.5'">
-                            <svg
-                                viewBox="0 0 24 24"
-                                class="h-5 w-5 shrink-0"
-                                :class="isAllDocumentsActive ? 'text-emerald-400' : 'text-slate-400'"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.8"
-                            >
-                                <rect x="3" y="4" width="18" height="4.5" rx="1" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 8.5V18a2 2 0 002 2h10a2 2 0 002-2V8.5" />
-                                <path stroke-linecap="round" d="M10 12.5h4" />
-                            </svg>
+                            <AppIcon
+                                name="archive"
+                                :size="20"
+                                :stroke-width="1.8"
+                                :class="['h-5 w-5 shrink-0', isAllDocumentsActive ? 'text-emerald-400' : 'text-slate-400']"
+                                decorative
+                            />
                             <span v-show="!collapsed" class="truncate">Semua Dokumen</span>
                         </span>
                         <span
@@ -395,16 +423,13 @@ onBeforeUnmount(() => {
                         :aria-expanded="setExpanded"
                         @click.stop="setExpanded = !setExpanded"
                     >
-                        <svg
-                            viewBox="0 0 24 24"
-                            class="h-4 w-4 transition-transform duration-300"
-                            :class="setExpanded ? 'rotate-180' : ''"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                        >
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
-                        </svg>
+                        <AppIcon
+                            name="chevron-down"
+                            :size="16"
+                            :stroke-width="1.8"
+                            :class="['h-4 w-4 transition-transform duration-300', setExpanded ? 'rotate-180' : '']"
+                            decorative
+                        />
                     </button>
                 </div>
 
@@ -413,68 +438,52 @@ onBeforeUnmount(() => {
                      mendorong semua grup menu di bawahnya turun dan
                      bottom pin ikut turun; aside yang overflow-y-auto
                      mengurus gulirnya. Tidak lagi layer floating. -->
+                <transition @enter="enterHooks" @leave="leaveHooks">
                 <div
                     v-show="!collapsed && setExpanded"
-                    class="my-1 ml-4 space-y-1 border-l border-slate-600/50 py-1 pl-4"
+                    class="my-1 ml-4 space-y-1 overflow-hidden border-l border-slate-600/50 py-1 pl-4 transition-[height] duration-300 ease-in-out"
                 >
-                    <Link
+                    <div
                         v-for="seksi in seksiList"
                         :key="seksi.id"
-                        :href="route('arsip.index', { seksi_id: seksi.id })"
                         class="flex items-center rounded-lg py-2 px-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
-                        :class="
-                            isSeksiActive(seksi.id)
+                        :class="[
+                            isSeksiActive(seksi.id) && !isSeksiDisabled(seksi.id)
                                 ? 'bg-white/10 font-medium text-white'
-                                : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                        "
-                        :aria-label="collapsed ? seksiMeta(seksi.nama_seksi).full : undefined"
-                        @mouseenter="showTip($event, seksiMeta(seksi.nama_seksi).full)"
-                        @mousemove="showTip($event, seksiMeta(seksi.nama_seksi).full)"
+                                : isSeksiDisabled(seksi.id)
+                                    ? 'cursor-not-allowed opacity-40'
+                                    : 'text-slate-300 hover:bg-white/5 hover:text-white',
+                        ]"
+                        :aria-disabled="isSeksiDisabled(seksi.id) ? true : undefined"
+                        @mouseenter="!isSeksiDisabled(seksi.id) && showTip($event, seksiMeta(seksi.nama_seksi).full)"
+                        @mousemove="!isSeksiDisabled(seksi.id) && showTip($event, seksiMeta(seksi.nama_seksi).full)"
                         @mouseleave="hideTip()"
-                        @focus="showTip($event, seksiMeta(seksi.nama_seksi).full)"
+                        @focus="!isSeksiDisabled(seksi.id) && showTip($event, seksiMeta(seksi.nama_seksi).full)"
                         @blur="hideTip()"
-                        @click="onNavClick"
                     >
-                        <svg
-                            v-if="seksiMeta(seksi.nama_seksi).icon === 'building'"
-                            viewBox="0 0 24 24"
-                            class="h-5 w-5 shrink-0"
-                            :class="isSeksiActive(seksi.id) ? 'text-emerald-400' : 'text-slate-400'"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
+                        <Link
+                            :href="isSeksiDisabled(seksi.id) ? undefined : route('arsip.index', { seksi_id: seksi.id })"
+                            :tabindex="isSeksiDisabled(seksi.id) ? -1 : 0"
+                            class="flex items-center w-full min-w-0 rounded-lg focus:outline-none"
+                            @click="!isSeksiDisabled(seksi.id) && onNavClick()"
                         >
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16M6 20V8l6-4 6 4v12M10 12h4M10 16h4" />
-                        </svg>
-                        <svg
-                            v-else-if="seksiMeta(seksi.nama_seksi).icon === 'globe'"
-                            viewBox="0 0 24 24"
-                            class="h-5 w-5 shrink-0"
-                            :class="isSeksiActive(seksi.id) ? 'text-emerald-400' : 'text-slate-400'"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                        >
-                            <circle cx="12" cy="12" r="9" />
-                            <path stroke-linecap="round" d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18" />
-                        </svg>
-                        <svg
-                            v-else
-                            viewBox="0 0 24 24"
-                            class="h-5 w-5 shrink-0"
-                            :class="isSeksiActive(seksi.id) ? 'text-emerald-400' : 'text-slate-400'"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                        >
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.5-7 10-7 10z" />
-                        </svg>
-                        <span v-show="!collapsed" class="ml-2 min-w-0 flex-1">
-                            <span class="truncate">{{ seksiMeta(seksi.nama_seksi).short }}</span>
-                            <span class="ml-1.5 text-[11px] text-slate-400">{{ countForSeksi(seksi.id) }}</span>
-                        </span>
-                    </Link>
+                            <AppIcon
+                                :name="seksiMeta(seksi.nama_seksi).icon || 'folder'"
+                                :size="20"
+                                :stroke-width="1.8"
+                                :class="['h-5 w-5 shrink-0', isSeksiActive(seksi.id) && !isSeksiDisabled(seksi.id) ? 'text-emerald-400' : 'text-slate-400']"
+                                decorative
+                            />
+                            <span v-show="!collapsed" class="ml-2 min-w-0 flex-1">
+                                <span class="truncate">{{ seksiMeta(seksi.nama_seksi).short }}</span>
+                                <span v-if="!isSeksiDisabled(seksi.id)" class="ml-1.5 text-[11px] text-slate-400">
+                                    {{ countForSeksi(seksi.id) }}
+                                </span>
+                            </span>
+                        </Link>
+                    </div>
                 </div>
+                </transition>
             </div>
 
             <!-- GRUP OPERASIONAL -->
@@ -496,25 +505,22 @@ onBeforeUnmount(() => {
                             : 'text-slate-300 hover:bg-white/5 hover:text-white',
                         collapsed ? 'justify-center px-2' : 'gap-2.5 px-3',
                     ]"
-                    :aria-label="collapsed ? 'Rekam Berkas Baru' : undefined"
-                    @mouseenter="showTip($event, 'Rekam Berkas Baru')"
-                    @mousemove="showTip($event, 'Rekam Berkas Baru')"
+                    :aria-label="collapsed ? 'Tambah Dokumen' : undefined"
+                    @mouseenter="showTip($event, 'Tambah Dokumen')"
+                    @mousemove="showTip($event, 'Tambah Dokumen')"
                     @mouseleave="hideTip()"
-                    @focus="showTip($event, 'Rekam Berkas Baru')"
+                    @focus="showTip($event, 'Tambah Dokumen')"
                     @blur="hideTip()"
                     @click="onNavClick"
                 >
-                    <svg
-                        viewBox="0 0 24 24"
-                        class="h-5 w-5 shrink-0"
-                        :class="route().current('arsip.create') ? 'text-emerald-400' : 'text-slate-400'"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
-                    </svg>
-                    <span v-show="!collapsed" class="truncate">Rekam Berkas Baru</span>
+                    <AppIcon
+                        name="file-plus"
+                        :size="20"
+                        :stroke-width="1.8"
+                        :class="['h-5 w-5 shrink-0', route().current('arsip.create') ? 'text-emerald-400' : 'text-slate-400']"
+                        decorative
+                    />
+                    <span v-show="!collapsed" class="truncate">Tambah Dokumen</span>
                 </Link>
 
                 <Link
@@ -534,17 +540,13 @@ onBeforeUnmount(() => {
                     @blur="hideTip()"
                     @click="onNavClick"
                 >
-                    <svg
-                        viewBox="0 0 24 24"
-                        class="h-5 w-5 shrink-0"
-                        :class="route().current('scan.*') ? 'text-emerald-400' : 'text-slate-400'"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                    >
-                        <path stroke-linecap="round" d="M4 8V5a1 1 0 011-1h3M16 4h3a1 1 0 011 1v3M20 16v3a1 1 0 01-1 1h-3M8 20H5a1 1 0 01-1-1v-3" />
-                        <rect x="8" y="8" width="8" height="8" rx="1" />
-                    </svg>
+                    <AppIcon
+                        name="scan"
+                        :size="20"
+                        :stroke-width="1.8"
+                        :class="['h-5 w-5 shrink-0', route().current('scan.*') ? 'text-emerald-400' : 'text-slate-400']"
+                        decorative
+                    />
                     <span v-show="!collapsed" class="truncate">Pindai QR Berkas</span>
                 </Link>
             </div>
@@ -576,16 +578,13 @@ onBeforeUnmount(() => {
                     @blur="hideTip()"
                     @click="onNavClick"
                 >
-                    <svg
-                        viewBox="0 0 24 24"
-                        class="h-5 w-5 shrink-0"
-                        :class="route().current('rak.*') ? 'text-emerald-400' : 'text-slate-400'"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16" />
-                    </svg>
+                    <AppIcon
+                        name="rak"
+                        :size="20"
+                        :stroke-width="1.8"
+                        :class="['h-5 w-5 shrink-0', route().current('rak.*') ? 'text-emerald-400' : 'text-slate-400']"
+                        decorative
+                    />
                     <span v-show="!collapsed" class="truncate">Rak</span>
                 </Link>
             </div>
@@ -617,16 +616,13 @@ onBeforeUnmount(() => {
                     @blur="hideTip()"
                     @click="onNavClick"
                 >
-                    <svg
-                        viewBox="0 0 24 24"
-                        class="h-5 w-5 shrink-0"
-                        :class="route().current('users.*') ? 'text-emerald-400' : 'text-slate-400'"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 20a4 4 0 00-8 0M12 12a4 4 0 100-8 4 4 0 000 8zm6 8a4 4 0 00-2-3.46M17 4.54a4 4 0 010 6.92" />
-                    </svg>
+                    <AppIcon
+                        name="users"
+                        :size="20"
+                        :stroke-width="1.8"
+                        :class="['h-5 w-5 shrink-0', route().current('users.*') ? 'text-emerald-400' : 'text-slate-400']"
+                        decorative
+                    />
                     <span v-show="!collapsed" class="truncate">Management User</span>
                 </Link>
 
@@ -647,17 +643,13 @@ onBeforeUnmount(() => {
                     @blur="hideTip()"
                     @click="onNavClick"
                 >
-                    <svg
-                        viewBox="0 0 24 24"
-                        class="h-5 w-5 shrink-0"
-                        :class="route().current('activity.*') ? 'text-emerald-400' : 'text-slate-400'"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                    >
-                        <path stroke-linecap="round" d="M4 5h16M4 12h16M4 19h10" />
-                        <circle cx="18" cy="19" r="2" />
-                    </svg>
+                    <AppIcon
+                        name="activity"
+                        :size="20"
+                        :stroke-width="1.8"
+                        :class="['h-5 w-5 shrink-0', route().current('activity.*') ? 'text-emerald-400' : 'text-slate-400']"
+                        decorative
+                    />
                     <span v-show="!collapsed" class="truncate">Log Activity</span>
                 </Link>
 
@@ -678,18 +670,140 @@ onBeforeUnmount(() => {
                     @blur="hideTip()"
                     @click="onNavClick"
                 >
-                    <svg
-                        viewBox="0 0 24 24"
-                        class="h-5 w-5 shrink-0"
-                        :class="route().current('backup.*') ? 'text-emerald-400' : 'text-slate-400'"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 12l-3.5-3.5M12 16l3.5-3.5M4 20h16" />
-                    </svg>
+                    <AppIcon
+                        name="backup"
+                        :size="20"
+                        :stroke-width="1.8"
+                        :class="['h-5 w-5 shrink-0', route().current('backup.*') ? 'text-emerald-400' : 'text-slate-400']"
+                        decorative
+                    />
                     <span v-show="!collapsed" class="truncate">Cadangkan / Pulihkan</span>
                 </Link>
+
+                <!-- Halaman Publik — toggle + sub-list -->
+                <button
+                    type="button"
+                    class="flex items-center rounded-lg py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
+                    :class="[
+                        route().current('halaman-publik.*')
+                            ? 'bg-white/10 font-medium text-white'
+                            : 'text-slate-300 hover:bg-white/5 hover:text-white',
+                        collapsed ? 'justify-center px-2' : 'gap-2.5 px-3',
+                    ]"
+                    :aria-label="collapsed ? 'Halaman Publik' : undefined"
+                    :aria-expanded="!collapsed && publikExpanded"
+                    @mouseenter="showTip($event, 'Halaman Publik')"
+                    @mousemove="showTip($event, 'Halaman Publik')"
+                    @mouseleave="hideTip()"
+                    @focus="showTip($event, 'Halaman Publik')"
+                    @blur="hideTip()"
+                    @click="publikExpanded = !publikExpanded"
+                >
+                    <AppIcon
+                        name="layout"
+                        :size="20"
+                        :stroke-width="1.8"
+                        :class="['h-5 w-5 shrink-0', route().current('halaman-publik.*') ? 'text-emerald-400' : 'text-slate-400']"
+                        decorative
+                    />
+                    <span v-show="!collapsed" class="min-w-0 flex-1 truncate text-left">Halaman Publik</span>
+                    <AppIcon
+                        v-show="!collapsed"
+                        name="chevron-down"
+                        :size="16"
+                        :stroke-width="1.8"
+                        :class="['h-4 w-4 shrink-0 transition-transform duration-300', publikExpanded ? 'rotate-180' : '']"
+                        decorative
+                    />
+                </button>
+
+                <!-- Sub-list Halaman Publik -->
+                <transition @enter="enterHooks" @leave="leaveHooks">
+                <div
+                    v-show="!collapsed && publikExpanded"
+                    class="my-1 ml-4 space-y-1 overflow-hidden border-l border-slate-600/50 py-1 pl-4 transition-[height] duration-300 ease-in-out"
+                >
+                    <Link
+                        :href="route('halaman-publik.beranda')"
+                        class="flex items-center rounded-lg py-2 px-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
+                        :class="
+                            route().current('halaman-publik.beranda')
+                                ? 'bg-white/10 font-medium text-white'
+                                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                        "
+                        @click="onNavClick"
+                    >
+                        <AppIcon
+                            name="carousel"
+                            :size="20"
+                            :stroke-width="1.8"
+                            :class="['h-5 w-5 shrink-0', route().current('halaman-publik.beranda') ? 'text-emerald-400' : 'text-slate-400']"
+                            decorative
+                        />
+                        <span class="ml-2 min-w-0 flex-1 truncate">Foto Carousel</span>
+                    </Link>
+
+                    <Link
+                        :href="route('halaman-publik.manfaat')"
+                        class="flex items-center rounded-lg py-2 px-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
+                        :class="
+                            route().current('halaman-publik.manfaat')
+                                ? 'bg-white/10 font-medium text-white'
+                                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                        "
+                        @click="onNavClick"
+                    >
+                        <AppIcon
+                            name="manfaat"
+                            :size="20"
+                            :stroke-width="1.8"
+                            :class="['h-5 w-5 shrink-0', route().current('halaman-publik.manfaat') ? 'text-emerald-400' : 'text-slate-400']"
+                            decorative
+                        />
+                        <span class="ml-2 min-w-0 flex-1 truncate">Kartu Manfaat</span>
+                    </Link>
+
+                    <Link
+                        :href="route('halaman-publik.alur-kerja')"
+                        class="flex items-center rounded-lg py-2 px-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
+                        :class="
+                            route().current('halaman-publik.alur-kerja')
+                                ? 'bg-white/10 font-medium text-white'
+                                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                        "
+                        @click="onNavClick"
+                    >
+                        <AppIcon
+                            name="alur"
+                            :size="20"
+                            :stroke-width="1.8"
+                            :class="['h-5 w-5 shrink-0', route().current('halaman-publik.alur-kerja') ? 'text-emerald-400' : 'text-slate-400']"
+                            decorative
+                        />
+                        <span class="ml-2 min-w-0 flex-1 truncate">Langkah Prosedur</span>
+                    </Link>
+
+                    <Link
+                        :href="route('halaman-publik.faq')"
+                        class="flex items-center rounded-lg py-2 px-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
+                        :class="
+                            route().current('halaman-publik.faq')
+                                ? 'bg-white/10 font-medium text-white'
+                                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                        "
+                        @click="onNavClick"
+                    >
+                        <AppIcon
+                            name="faq"
+                            :size="20"
+                            :stroke-width="1.8"
+                            :class="['h-5 w-5 shrink-0', route().current('halaman-publik.faq') ? 'text-emerald-400' : 'text-slate-400']"
+                            decorative
+                        />
+                        <span class="ml-2 min-w-0 flex-1 truncate">FAQ Bantuan</span>
+                    </Link>
+                </div>
+                </transition>
             </div>
         </div>
 
@@ -732,15 +846,13 @@ onBeforeUnmount(() => {
                         v-else
                         class="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10"
                     >
-                        <svg
-                            viewBox="0 0 24 24"
+                        <AppIcon
+                            name="avatar"
+                            :size="14"
+                            :stroke-width="1.8"
                             class="h-3.5 w-3.5 text-slate-200"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                        >
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM4 20a8 8 0 1116 0" />
-                        </svg>
+                            decorative
+                        />
                         <span class="absolute bottom-0 right-0 h-2 w-2 rounded-full border border-brand-navy bg-emerald-400" />
                     </div>
 
@@ -760,21 +872,13 @@ onBeforeUnmount(() => {
                         @blur="hideTip()"
                         @click="onNavClick"
                     >
-                        <svg
-                            viewBox="0 0 24 24"
+                        <AppIcon
+                            name="gear"
+                            :size="20"
+                            :stroke-width="1.8"
                             class="h-5 w-5"
-                            aria-hidden="true"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.72l-.43.25a2 2 0 01-2 0l-.1-.05a2 2 0 00-2.78.85l-.23.38a2 2 0 00.85 2.78l.1.05a2 2 0 011 1.72v.44a2 2 0 01-1 1.72l-.1.05a2 2 0 00-.85 2.78l.23.38a2 2 0 002.78.85l.1-.05a2 2 0 012 0l.43.25a2 2 0 011 1.72V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.72l.43-.25a2 2 0 012 0l.1.05a2 2 0 002.78-.85l.23-.38a2 2 0 00-.85-2.78l-.1-.05a2 2 0 01-1-1.72v-.44a2 2 0 011-1.72l.1-.05a2 2 0 00.85-2.78l-.23-.38a2 2 0 00-2.78-.85l-.1.05a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.72V4a2 2 0 00-2-2z"
-                            />
-                            <circle cx="12" cy="12" r="3" />
-                        </svg>
+                            decorative
+                        />
                     </Link>
                 </div>
 
@@ -799,16 +903,13 @@ onBeforeUnmount(() => {
                 >
                     <!-- Ikon sama besar dengan item menu (h-5 w-5) agar kolom
                          kiri sejajar di semua mode. -->
-                    <svg
-                        viewBox="0 0 24 24"
+                    <AppIcon
+                        name="logout"
+                        :size="20"
+                        :stroke-width="1.8"
                         class="h-5 w-5 shrink-0"
-                        aria-hidden="true"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H4m0 0l3-3m-3 3l3 3M10 5h7a2 2 0 012 2v10a2 2 0 01-2 2h-7" />
-                    </svg>
+                        decorative
+                    />
                     <span v-show="!collapsed">Keluar</span>
                 </Link>
             </div>

@@ -5,7 +5,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
 const props = defineProps({
@@ -19,6 +19,14 @@ const props = defineProps({
     },
 });
 
+// Seksi yang dikelola user (staff). Admin = null (bebas memilih semua).
+const page = usePage();
+const mySeksiId = computed(() => {
+    const u = page.props.auth?.user;
+    return u?.role !== 'admin' ? Number(u.seksi_id) : null;
+});
+const isSeksiOptionDisabled = (id) => mySeksiId.value !== null && Number(id) !== mySeksiId.value;
+
 const form = useForm({
     kode_arsip: '',
     nomor_surat: '',
@@ -30,7 +38,7 @@ const form = useForm({
     tanggal_diterima: '',
     asal_instansi: '',
     tujuan_instansi: '',
-    seksi_id: props.seksiList[0]?.id ?? '',
+    seksi_id: mySeksiId.value ? String(mySeksiId.value) : (props.seksiList[0]?.id ?? ''),
     rak_id: '',
     nomor_box: '',
     nomor_map: '',
@@ -120,11 +128,11 @@ const submit = () => {
             </div>
         </template>
 
-        <div class="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div v-reveal class="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <form class="space-y-4" @submit.prevent="submit">
                 <div>
                     <InputLabel for="kode_arsip" value="Kode Arsip" />
-                    <TextInput id="kode_arsip" v-model="form.kode_arsip" class="mt-1 block w-full rounded-xl" required />
+                    <TextInput id="kode_arsip" v-model="form.kode_arsip" class="mt-1 block w-full rounded-xl" required placeholder="Contoh: ARS-001" />
                     <InputError class="mt-1" :message="form.errors.kode_arsip" />
                 </div>
 
@@ -140,13 +148,13 @@ const submit = () => {
 
                 <div>
                     <InputLabel for="nomor_surat" value="Nomor Surat" />
-                    <TextInput id="nomor_surat" v-model="form.nomor_surat" class="mt-1 block w-full rounded-xl" required />
+                    <TextInput id="nomor_surat" v-model="form.nomor_surat" class="mt-1 block w-full rounded-xl" required placeholder="Contoh: 001/DSK/2026" />
                     <InputError class="mt-1" :message="form.errors.nomor_surat" />
                 </div>
 
                 <div>
                     <InputLabel for="perihal" value="Perihal" />
-                    <TextInput id="perihal" v-model="form.perihal" class="mt-1 block w-full rounded-xl" required />
+                    <TextInput id="perihal" v-model="form.perihal" class="mt-1 block w-full rounded-xl" required placeholder="Contoh: Surat Masuk atau Surat Keluar" />
                     <InputError class="mt-1" :message="form.errors.perihal" />
                 </div>
 
@@ -186,20 +194,25 @@ const submit = () => {
 
                 <div>
                     <InputLabel for="asal_instansi" value="Asal Instansi" />
-                    <TextInput id="asal_instansi" v-model="form.asal_instansi" class="mt-1 block w-full rounded-xl" />
+                    <TextInput id="asal_instansi" v-model="form.asal_instansi" class="mt-1 block w-full rounded-xl" placeholder="Contoh: Nama Instansi" />
                     <InputError class="mt-1" :message="form.errors.asal_instansi" />
                 </div>
 
                 <div>
                     <InputLabel for="tujuan_instansi" value="Tujuan Instansi" />
-                    <TextInput id="tujuan_instansi" v-model="form.tujuan_instansi" class="mt-1 block w-full rounded-xl" />
+                    <TextInput id="tujuan_instansi" v-model="form.tujuan_instansi" class="mt-1 block w-full rounded-xl" placeholder="Contoh: Nama Instansi" />
                     <InputError class="mt-1" :message="form.errors.tujuan_instansi" />
                 </div>
 
                 <div>
                     <InputLabel for="seksi_id" value="Seksi" />
                     <select id="seksi_id" v-model="form.seksi_id" class="mt-1 block w-full rounded-xl border-slate-300 shadow-sm" required>
-                        <option v-for="seksi in seksiList" :key="seksi.id" :value="seksi.id">
+                        <option
+                            v-for="seksi in seksiList"
+                            :key="seksi.id"
+                            :value="seksi.id"
+                            :disabled="isSeksiOptionDisabled(seksi.id)"
+                        >
                             {{ seksi.nama_seksi }}
                         </option>
                     </select>
@@ -221,21 +234,21 @@ const submit = () => {
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div>
                         <InputLabel for="nomor_box" value="Nomor Box" />
-                        <TextInput id="nomor_box" v-model="form.nomor_box" class="mt-1 block w-full rounded-xl" />
+                        <TextInput id="nomor_box" v-model="form.nomor_box" class="mt-1 block w-full rounded-xl" placeholder="Contoh: B-01" />
                     </div>
                     <div>
                         <InputLabel for="nomor_map" value="Nomor Map" />
-                        <TextInput id="nomor_map" v-model="form.nomor_map" class="mt-1 block w-full rounded-xl" />
+                        <TextInput id="nomor_map" v-model="form.nomor_map" class="mt-1 block w-full rounded-xl" placeholder="Contoh: Map 01" />
                     </div>
                     <div>
                         <InputLabel for="nomor_slot" value="Nomor Slot" />
-                        <TextInput id="nomor_slot" v-model="form.nomor_slot" class="mt-1 block w-full rounded-xl" />
+                        <TextInput id="nomor_slot" v-model="form.nomor_slot" class="mt-1 block w-full rounded-xl" placeholder="Contoh: S-01" />
                     </div>
                 </div>
 
                 <div>
                     <InputLabel for="catatan" value="Catatan / Lokasi Rak" />
-                    <textarea id="catatan" v-model="form.catatan" class="mt-1 block w-full rounded-xl border-slate-300 shadow-sm" rows="3" />
+                    <textarea id="catatan" v-model="form.catatan" class="mt-1 block w-full rounded-xl border-slate-300 shadow-sm" rows="3" placeholder="Tambahkan catatan khusus mengenai dokumen ini (opsional)..." />
                     <InputError class="mt-1" :message="form.errors.catatan" />
                 </div>
 

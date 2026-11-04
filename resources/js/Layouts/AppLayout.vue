@@ -1,9 +1,10 @@
 <script setup>
 import Sidebar from '@/Components/Sidebar.vue';
-import GlobalSearchBar from '@/Components/GlobalSearchBar.vue';
+import StafOnlineToast from '@/Components/StafOnlineToast.vue';
+import { useStafOnline } from '@/composables/useStafOnline';
 import { institution } from '@/config/institution';
 import { Link, usePage } from '@inertiajs/vue3';
-import { onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
 
 defineProps({
     activeSeksiId: {
@@ -13,6 +14,13 @@ defineProps({
 });
 
 const page = usePage();
+const isAdmin = computed(() => page.props.auth?.user?.role === 'admin');
+
+/* ============ Notifikasi staf online (admin-only) ============ */
+const stafToast = ref(null);
+const { count: stafOnlineCount } = useStafOnline((stafBaru) => {
+    stafToast.value?.addToast(stafBaru);
+});
 
 /* ============ Skeleton loading ====== */
 const SKELETON_MS = 1000;
@@ -136,9 +144,7 @@ onUnmounted(() => {
                             aria-controls="mobile-sidebar"
                             @click="mobileOpen = true"
                         >
-                            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16" />
-                            </svg>
+                            <AppIcon name="menu" :size="20" :stroke-width="1.8" class="h-5 w-5" decorative />
                             <span class="hidden sm:inline">Menu</span>
                         </button>
                         <div class="flex min-w-0 shrink items-center gap-2 lg:hidden">
@@ -158,8 +164,24 @@ onUnmounted(() => {
                             {{ page.props.auth?.user?.name }}
                         </Link>
                     </div>
+                    <!-- Indikator staf online — hanya admin, di kanan header -->
+                    <span
+                        v-if="isAdmin && stafOnlineCount > 0"
+                        class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200 sm:order-last sm:ml-auto"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        <span class="relative flex h-2 w-2">
+                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75 motion-reduce:hidden" />
+                            <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                        </span>
+                        {{ stafOnlineCount }} staf online
+                    </span>
                     <div class="hidden min-w-0 flex-1 sm:block" aria-hidden="true" />
-                    <GlobalSearchBar />
+                    <!-- Ruang bekas search bar: lebar & tinggi (34px = input + padding + border) disamakan dengan input sebelumnya agar header tidak mengecil -->
+                    <div class="min-w-0 w-full flex-1 sm:max-w-xl" aria-hidden="true">
+                        <div class="h-[34px] w-full" />
+                    </div>
                     <div class="hidden min-w-0 flex-1 sm:block" aria-hidden="true" />
                 </div>
             </div>
@@ -195,5 +217,8 @@ onUnmounted(() => {
                 </template>
             </main>
         </div>
+
+        <!-- Toast staf online (admin-only), dipasang di semua halaman AppLayout -->
+        <StafOnlineToast v-if="isAdmin" ref="stafToast" />
     </div>
 </template>

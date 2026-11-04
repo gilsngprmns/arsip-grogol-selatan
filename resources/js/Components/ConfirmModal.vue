@@ -39,9 +39,7 @@ const confirm = () => emit('confirm');
                     @click="close"
                 >
                     <span class="sr-only">Tutup</span>
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
-                    </svg>
+                    <AppIcon name="close" :size="20" :stroke-width="2" class="h-5 w-5" decorative />
                 </button>
             </div>
         </div>
@@ -49,9 +47,7 @@ const confirm = () => emit('confirm');
         <div class="px-6 py-5">
             <div class="flex items-start gap-3">
                 <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100">
-                    <svg class="h-5 w-5 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                    </svg>
+                    <AppIcon name="warning" :size="20" :stroke-width="2" class="h-5 w-5 text-rose-600" decorative />
                 </div>
                 <p class="text-sm text-slate-600">{{ message }}</p>
             </div>

@@ -80,6 +80,11 @@ const stopScanner = async () => {
     }
 };
 
+const getResponsiveQrbox = () => {
+    const maxWidth = Math.min(220, (typeof window !== 'undefined' ? window.innerWidth : 375) - 40);
+    return { width: maxWidth, height: maxWidth };
+};
+
 const startWebcam = async () => {
     await stopScanner();
     await nextTick();
@@ -94,7 +99,7 @@ const startWebcam = async () => {
             { facingMode: 'environment' },
             {
                 fps: 10,
-                qrbox: { width: 220, height: 220 },
+                qrbox: getResponsiveQrbox(),
                 aspectRatio: 1.777,
             },
             (decodedText) => {
@@ -168,18 +173,14 @@ onBeforeUnmount(() => {
         <div
             :id="scannerId"
             class="overflow-hidden rounded-xl bg-slate-900"
-            :class="mode === 'webcam' && active ? 'min-h-[260px]' : 'hidden'"
+            :class="mode === 'webcam' && active ? 'min-h-[260px] w-full' : 'hidden'"
         />
 
         <div
             v-if="mode === 'upload'"
             class="flex min-h-[220px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 text-center"
         >
-            <svg viewBox="0 0 24 24" class="mb-3 h-10 w-10 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="3" y="5" width="18" height="14" rx="2" />
-                <circle cx="8.5" cy="10.5" r="1.5" />
-                <path stroke-linecap="round" d="M21 16l-5-5-4 4-2-2-5 5" />
-            </svg>
+            <AppIcon name="image" :size="40" :stroke-width="1.5" class="mb-3 h-10 w-10 text-slate-400" decorative />
             <p class="text-sm font-medium text-slate-600">Pilih file gambar QR dari komputer</p>
             <input
                 ref="fileInput"

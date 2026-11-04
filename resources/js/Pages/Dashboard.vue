@@ -1,6 +1,7 @@
 <script setup>
 import SirkulasiModal from '@/Components/SirkulasiModal.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { useStafOnline } from '@/composables/useStafOnline';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
@@ -46,8 +47,28 @@ const props = defineProps({
 
 const page = usePage();
 const isAdmin = computed(() => page.props.auth?.user?.role === 'admin');
+// Label role: admin = "Admin", staff = nama seksi yang dikelolanya.
+const roleLabel = computed(() => {
+    if (isAdmin.value) return 'Admin';
+    const u = page.props.userSeksi;
+    return u?.nama_seksi ?? 'Staf';
+});
 const showSirkulasiModal = ref(false);
 const sirkulasiArsip = ref(null);
+
+/* ============ Panel staf online (admin-only, live via polling) ============ */
+// AppLayout juga memanggil useStafOnline() — satu interval, tidak double.
+const { active: staffOnline, count: staffOnlineCount } = useStafOnline();
+const timeAgo = (value) => {
+    if (!value) return '';
+    const s = Math.floor((Date.now() - new Date(value).getTime()) / 1000);
+    if (s < 60) return 'baru saja';
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m} mnt lalu`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h} jam lalu`;
+    return `${Math.floor(h / 24)} hari lalu`;
+};
 
 const activeTab = ref('peminjaman');
 
@@ -371,7 +392,7 @@ const closeSirkulasi = () => {
                         class="rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider text-white"
                         :class="isAdmin ? 'bg-brand-navy' : 'bg-brand-blue'"
                     >
-                        {{ isAdmin ? 'Admin' : 'Staf' }}
+                        {{ roleLabel }}
                     </span>
                 </div>
             </div>
@@ -392,7 +413,7 @@ const closeSirkulasi = () => {
             <!-- Kolom kiri skeleton -->
             <div class="space-y-5 lg:col-span-8">
                 <!-- Baris 1: KPI 4 kolom -->
-                <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div v-for="i in 4" :key="'kpi-' + i" class="h-24 rounded-2xl bg-slate-200" />
                 </div>
                 <!-- Baris 2: Grafik batang + list per-seksi -->
@@ -467,12 +488,14 @@ const closeSirkulasi = () => {
             <!-- =============== LEFT COLUMN (lg:col-span-8) =============== -->
             <div class="space-y-5 lg:col-span-8">
                 <!-- Baris 1: KPI 4 kolom -->
-                <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <Link
-                        v-for="card in kpiCards"
+                        v-for="(card, index) in kpiCards"
                         :key="card.label"
+                        v-reveal
+                        :style="{ transitionDelay: `${index * 100}ms` }"
                         :href="card.href"
-                        class="rounded-2xl border bg-white p-4 shadow-sm transition hover:ring-2 hover:ring-brand-blue/20 sm:p-5"
+                        class="rounded-2xl border bg-white p-3 shadow-sm transition hover:ring-2 hover:ring-brand-blue/20 sm:p-4 md:p-5"
                         :class="card.tone"
                     >
                         <p class="text-xs font-semibold uppercase tracking-wider opacity-80">
@@ -485,7 +508,7 @@ const closeSirkulasi = () => {
                 <!-- Baris 2: Visualisasi (tren + volume per seksi) -->
                 <div class="grid grid-cols-1 gap-5">
                     <!-- Tren Sirkulasi -->
-                    <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+                    <div v-reveal class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
                         <div class="flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
                             <div class="whitespace-nowrap">
                                 <h2 class="text-sm font-bold text-brand-navy">Tren Sirkulasi</h2>
@@ -555,7 +578,7 @@ const closeSirkulasi = () => {
                     </div>
 
                     <!-- Volume per Seksi -->
-                    <div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+                    <div v-reveal :style="{ transitionDelay: '100ms' }" class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
                         <div class="flex items-baseline justify-between gap-2">
                             <div class="min-w-0">
                                 <h2 class="text-sm font-bold text-brand-navy">Volume per Seksi</h2>
@@ -595,7 +618,7 @@ const closeSirkulasi = () => {
                 </div>
 
                 <!-- Baris 3: Tabel operasional via tab -->
-                <div class="rounded-2xl border border-slate-100 bg-white shadow-sm">
+                <div v-reveal :style="{ transitionDelay: '200ms' }" class="rounded-2xl border border-slate-100 bg-white shadow-sm">
                     <div
                         class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5"
                     >
@@ -749,7 +772,7 @@ const closeSirkulasi = () => {
             <!-- =============== RIGHT COLUMN (lg:col-span-4) =============== -->
             <div class="space-y-5 lg:col-span-4">
                 <!-- Peringatan terpadu -->
-                <div class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+                <div v-reveal class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
                     <div class="flex items-center justify-between gap-2">
                         <div class="min-w-0">
                             <h2 class="text-sm font-bold text-brand-navy">Perlu Diperhatikan</h2>
@@ -788,7 +811,7 @@ const closeSirkulasi = () => {
                 </div>
 
                 <!-- Kapasitas rak (progress bar) -->
-                <div class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+                <div v-reveal :style="{ transitionDelay: '100ms' }" class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
                     <div class="flex items-center justify-between gap-2">
                         <div class="min-w-0">
                             <h2 class="text-sm font-bold text-brand-navy">Kapasitas Rak</h2>
@@ -837,7 +860,7 @@ const closeSirkulasi = () => {
                 </div>
 
                 <!-- Aktivitas terbaru -->
-                <div class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+                <div v-reveal :style="{ transitionDelay: '200ms' }" class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
                     <div class="flex items-center justify-between gap-2">
                         <div class="min-w-0">
                             <h2 class="text-sm font-bold text-brand-navy">Aktivitas Terbaru</h2>
@@ -865,12 +888,45 @@ const closeSirkulasi = () => {
                         <p class="text-xs text-slate-500">Belum ada riwayat aktivitas.</p>
                     </div>
                 </div>
+
+                <!-- Staf aktif (admin-only, live) -->
+                <div v-if="isAdmin" v-reveal :style="{ transitionDelay: '300ms' }" class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="min-w-0">
+                            <h2 class="text-sm font-bold text-brand-navy">Staf Aktif</h2>
+                            <p class="mt-1 text-xs text-slate-500">Sesi staf yang aktif 30 menit terakhir.</p>
+                        </div>
+                        <span
+                            v-if="staffOnlineCount"
+                            class="shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700"
+                        >
+                            {{ staffOnlineCount }}
+                        </span>
+                    </div>
+                    <div v-if="staffOnline.length" class="mt-3 divide-y divide-slate-100">
+                        <div v-for="staff in staffOnline" :key="staff.id" class="flex items-center gap-2.5 py-2.5">
+                            <span class="relative flex h-2 w-2 shrink-0">
+                                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75 motion-reduce:hidden" />
+                                <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                            </span>
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-medium text-slate-800">{{ staff.name }}</p>
+                                <p class="text-xs text-slate-500">{{ staff.seksi || 'Seksi tidak ditentukan' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="mt-3 rounded-xl bg-emerald-50 p-4 text-center">
+                        <p class="text-sm font-semibold text-emerald-800">Tidak ada staf aktif.</p>
+                        <p class="mt-0.5 text-xs text-emerald-600">Staf yang login akan muncul di sini.</p>
+                    </div>
+                </div>
             </div>
 
             <!-- =============== BOTTOM AREA (lg:col-span-12) =============== -->
             <div class="lg:col-span-12">
                 <div
                     v-if="isAdmin && props.adminOverview"
+                    v-reveal
                     class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
                 >
                     <div class="flex flex-wrap items-center justify-between gap-3">
@@ -906,9 +962,7 @@ const closeSirkulasi = () => {
                                     <p class="text-sm font-bold">{{ item.label }}</p>
                                     <p class="mt-0.5 text-xs opacity-80">{{ item.description }}</p>
                                 </div>
-                                <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0 opacity-50" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H7" />
-                                </svg>
+                                <AppIcon name="arrow-right" :size="16" :stroke-width="2" class="h-4 w-4 shrink-0 opacity-50" decorative />
                             </a>
                             <Link
                                 v-else
@@ -920,9 +974,7 @@ const closeSirkulasi = () => {
                                     <p class="text-sm font-bold">{{ item.label }}</p>
                                     <p class="mt-0.5 text-xs opacity-80">{{ item.description }}</p>
                                 </div>
-                                <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0 opacity-50" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H7" />
-                                </svg>
+                                <AppIcon name="arrow-right" :size="16" :stroke-width="2" class="h-4 w-4 shrink-0 opacity-50" decorative />
                             </Link>
                         </template>
                     </div>
@@ -930,6 +982,8 @@ const closeSirkulasi = () => {
 
                 <div
                     v-if="isAdmin && props.adminOverview"
+                    v-reveal
+                    :style="{ transitionDelay: '100ms' }"
                     class="mt-5 rounded-2xl border border-slate-100 bg-slate-50 p-5"
                 >
                     <div>

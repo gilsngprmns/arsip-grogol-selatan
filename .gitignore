@@ -24,3 +24,6 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Local asset backups (originals pre-compression); not part of the app
+.backups/

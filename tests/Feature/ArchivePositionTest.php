@@ -19,8 +19,8 @@ class ArchivePositionTest extends TestCase
     {
         Storage::fake('public');
 
-        $user = User::factory()->create(['role' => 'staf']);
         $seksi = Seksi::create(['nama_seksi' => 'Pelayanan']);
+        $user = User::factory()->create(['role' => 'staf', 'seksi_id' => $seksi->id]);
         $lokasi = LokasiArsip::create([
             'kode_lokasi' => 'LOC-001',
             'nama_lokasi' => 'Ruang Arsip',
@@ -68,9 +68,9 @@ class ArchivePositionTest extends TestCase
     {
         Storage::fake('public');
 
-        $user = User::factory()->create(['role' => 'staf']);
         $seksiA = Seksi::create(['nama_seksi' => 'Pemerintahan']);
         $seksiB = Seksi::create(['nama_seksi' => 'Kesejahteraan Rakyat']);
+        $user = User::factory()->create(['role' => 'staf', 'seksi_id' => $seksiA->id]);
         $lokasi = LokasiArsip::create([
             'kode_lokasi' => 'LOC-001',
             'nama_lokasi' => 'Ruang Arsip',

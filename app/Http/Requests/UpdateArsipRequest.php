@@ -12,7 +12,16 @@ class UpdateArsipRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+
+        if ($user->role === 'admin') {
+            return true;
+        }
+
+        $arsip = $this->route('arsip');
+
+        return (int) $arsip->seksi_id === (int) $user->seksi_id
+            && (int) $this->input('seksi_id') === (int) $user->seksi_id;
     }
 
     /**

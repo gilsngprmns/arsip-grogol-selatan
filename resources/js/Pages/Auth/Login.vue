@@ -58,7 +58,7 @@ const submit = () => {
             </div>
         </template>
 
-        <div class="mb-8">
+        <div v-reveal class="mb-8">
             <p class="mb-3 text-sm font-medium text-brand-blue lg:hidden">
                 {{ institution.accessNotice }}
             </p>
@@ -74,7 +74,7 @@ const submit = () => {
             {{ status }}
         </div>
 
-        <form class="space-y-5" @submit.prevent="submit">
+        <form v-reveal :style="{ transitionDelay: '150ms' }" class="space-y-5" @submit.prevent="submit">
             <div>
                 <InputLabel for="email" value="Alamat email" class="text-slate-700" />
 
@@ -119,35 +119,8 @@ const submit = () => {
                         :aria-label="showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
                         @click="showPassword = !showPassword"
                     >
-                        <svg
-                            v-if="!showPassword"
-                            viewBox="0 0 24 24"
-                            class="h-5 w-5"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12Z"
-                            />
-                            <circle cx="12" cy="12" r="2.5" />
-                        </svg>
-                        <svg
-                            v-else
-                            viewBox="0 0 24 24"
-                            class="h-5 w-5"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M3 3l18 18M9.9 9.9A2.5 2.5 0 0 0 12 14.5a2.5 2.5 0 0 0 2.1-1.1M6.7 6.7C4.4 8.1 2.5 12 2.5 12s3.5 6.5 9.5 6.5a10 10 0 0 0 4.3-1M14.1 9.9A2.5 2.5 0 0 1 17 12c0 .3 0 .5-.1.8M17.3 17.3C19.1 16 21.5 12 21.5 12a16 16 0 0 0-3.2-3.8"
-                            />
-                        </svg>
+                        <AppIcon v-if="!showPassword" name="eye" :size="20" :stroke-width="1.8" class="h-5 w-5" decorative />
+                        <AppIcon v-else name="eye-off" :size="20" :stroke-width="1.8" class="h-5 w-5" decorative />
                     </button>
                 </div>
 
@@ -168,33 +141,14 @@ const submit = () => {
                     :disabled="form.processing"
                 >
                     <span class="flex items-center justify-center gap-2">
-                        <svg
-                            v-if="form.processing"
-                            class="h-4 w-4 animate-spin"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                        >
-                            <circle
-                                class="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                stroke-width="4"
-                            />
-                            <path
-                                class="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z"
-                            />
-                        </svg>
+                        <AppIcon v-if="form.processing" name="loader" :size="16" :stroke-width="4" class="h-4 w-4 animate-spin" decorative />
                         {{ form.processing ? 'Memproses' : 'Masuk' }}
                     </span>
                 </PrimaryButton>
             </div>
         </form>
 
-        <p class="mt-8 text-sm leading-7 text-slate-500">
+        <p v-reveal :style="{ transitionDelay: '300ms' }" class="mt-8 text-sm leading-7 text-slate-500">
             Butuh akun atau reset sandi?
             <Link
                 :href="route('bantuan')"

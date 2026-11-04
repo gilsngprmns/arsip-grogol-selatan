@@ -8,7 +8,10 @@ SIP ARSIP adalah aplikasi operasional internal pemerintahan kelurahan: dipakai s
 
 ## Dials (antislop)
 
-ENERGY 1 / RHYTHM 1 / MOTION 1. Aplikasi internal pemerintahan: grid konsisten, tanpa gerak berlebih (hover state saja, tidak ada animasi scroll/parallax).
+- Halaman publik (Beranda, Manfaat, Prosedur, Bantuan): ENERGY 1 / RHYTHM 1 / MOTION 2 (scroll-reveal: fade-up via `v-reveal`, stagger ringan antar kartu; override owner 2026-10-31).
+- Halaman admin (Dashboard, Arsip, Rak, Users, Activity, Backup, dsb.): ENERGY 1 / RHYTHM 1 / MOTION 2 (scroll-reveal pada panel dan kartu; override owner 2026-10-31).
+
+Aplikasi internal pemerintahan: grid konsisten, tanpa gerak berlebih di area operasional.
 
 ## Palet
 

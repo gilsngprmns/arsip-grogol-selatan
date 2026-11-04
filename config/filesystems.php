@@ -33,7 +33,9 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // serve: false — disk ini tak punya URL signed; bila aktif, route
+            // /storage/{path}-nya men-*shadow* symlink publik (403 saat symlink hilang).
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

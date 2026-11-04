@@ -299,9 +299,6 @@ watch(hasActiveFilters, () => {
     liveCount.value = 0;
 });
 
-// ── Statistik ringkas hari ini ────────────────────────────────────────
-const stats = ref(props.stats ?? { today_total: 0, today_users: 0, today_failed: 0 });
-
 const lastPolledLabel = computed(() => {
     if (!lastPolled.value) return '';
     return new Intl.DateTimeFormat('id-ID', {
@@ -416,25 +413,6 @@ const shortcutClass = 'rounded-xl border border-slate-200 px-3 py-1.5 text-xs fo
                 </div>
             </div>
         </template>
-
-        <!-- Ringkasan statistik hari ini -->
-        <div v-if="stats.today_total > 0" v-reveal class="mb-4 grid grid-cols-3 gap-3">
-            <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                <p class="text-xs text-slate-500">Hari Ini</p>
-                <p class="mt-1 text-2xl font-bold text-slate-900">{{ stats.today_total }}</p>
-                <p class="text-xs text-slate-400">aktivitas</p>
-            </div>
-            <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                <p class="text-xs text-slate-500">Pengguna Aktif</p>
-                <p class="mt-1 text-2xl font-bold text-slate-900">{{ stats.today_users }}</p>
-                <p class="text-xs text-slate-400">pengguna</p>
-            </div>
-            <div v-if="stats.today_failed > 0" class="rounded-xl border border-rose-200 bg-rose-50 p-3 shadow-sm">
-                <p class="text-xs text-rose-500">Gagal</p>
-                <p class="mt-1 text-2xl font-bold text-rose-700">{{ stats.today_failed }}</p>
-                <p class="text-xs text-rose-400">kegagalan</p>
-            </div>
-        </div>
 
         <!-- Baris filter (gaya Users/Index.vue) -->
         <div v-reveal class="mb-4 flex flex-col gap-2.5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:flex-row md:flex-wrap md:items-center md:gap-3 md:p-4">

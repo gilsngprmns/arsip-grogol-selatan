@@ -56,8 +56,8 @@ class AuthActivityLogTest extends TestCase
     public function test_staff_arsip_store_creates_activity_log_visible_to_admin(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $staf  = User::factory()->create(['role' => 'staf']);
         $seksi = Seksi::create(['nama_seksi' => 'Seksi Test']);
+        $staf  = User::factory()->create(['role' => 'staf', 'seksi_id' => $seksi->id]);
 
         $this->actingAs($staf)->post('/arsip', [
             'kode_arsip'    => 'STF-LOG-001',
@@ -84,8 +84,8 @@ class AuthActivityLogTest extends TestCase
     public function test_staff_arsip_destroy_creates_activity_log_visible_to_admin(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $staf  = User::factory()->create(['role' => 'staf']);
         $seksi = Seksi::create(['nama_seksi' => 'Seksi Test']);
+        $staf  = User::factory()->create(['role' => 'staf', 'seksi_id' => $seksi->id]);
 
         $this->actingAs($staf)->post('/arsip', [
             'kode_arsip'    => 'STF-DEL-001',
@@ -125,8 +125,8 @@ class AuthActivityLogTest extends TestCase
 
     public function test_staff_arsip_store_via_inertia_header_creates_activity_log(): void
     {
-        $staf  = User::factory()->create(['role' => 'staf']);
         $seksi = Seksi::create(['nama_seksi' => 'Seksi Test']);
+        $staf  = User::factory()->create(['role' => 'staf', 'seksi_id' => $seksi->id]);
 
         $this->actingAs($staf)
             ->withHeaders(['X-Inertia' => 'true'])
@@ -147,8 +147,8 @@ class AuthActivityLogTest extends TestCase
 
     public function test_staff_arsip_update_via_inertia_header_creates_activity_log(): void
     {
-        $staf  = User::factory()->create(['role' => 'staf']);
         $seksi = Seksi::create(['nama_seksi' => 'Seksi Test']);
+        $staf  = User::factory()->create(['role' => 'staf', 'seksi_id' => $seksi->id]);
 
         $this->actingAs($staf)->post('/arsip', [
             'kode_arsip'    => 'STF-UPD-001',
@@ -182,8 +182,8 @@ class AuthActivityLogTest extends TestCase
 
     public function test_failed_arsip_store_logs_gagal_description(): void
     {
-        $staf  = User::factory()->create(['role' => 'staf']);
         $seksi = Seksi::create(['nama_seksi' => 'Seksi Duplikat']);
+        $staf  = User::factory()->create(['role' => 'staf', 'seksi_id' => $seksi->id]);
 
         // Buat arsip pertama
         DokumenArsip::create([
@@ -217,8 +217,8 @@ class AuthActivityLogTest extends TestCase
 
     public function test_successful_arsip_store_logs_sukses(): void
     {
-        $staf  = User::factory()->create(['role' => 'staf']);
         $seksi = Seksi::create(['nama_seksi' => 'Seksi Sukses']);
+        $staf  = User::factory()->create(['role' => 'staf', 'seksi_id' => $seksi->id]);
 
         $this->actingAs($staf)->post('/arsip', [
             'kode_arsip'    => 'OK-001',
@@ -285,8 +285,8 @@ class AuthActivityLogTest extends TestCase
     public function test_scan_by_kode_success_creates_activity_log(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $staf  = User::factory()->create(['role' => 'staf']);
         $seksi = Seksi::create(['nama_seksi' => 'Seksi Scan']);
+        $staf  = User::factory()->create(['role' => 'staf', 'seksi_id' => $seksi->id]);
 
         $arsip = DokumenArsip::create([
             'kode_arsip'    => 'SCAN-OK-001',
@@ -417,5 +417,141 @@ class AuthActivityLogTest extends TestCase
             ->latest()->first();
         $this->assertNotNull($log, 'Log reports.sections harus ada');
         $this->assertSame('Mengekspor laporan seksi.', $log->description);
+    }
+
+    // ── Target filling: fallback dari request input ────────────────────────
+
+    public function test_arsip_update_sets_target(): void
+    {
+        $seksi = Seksi::create(['nama_seksi' => 'Seksi Test Target']);
+        $staf  = User::factory()->create(['role' => 'staf', 'seksi_id' => $seksi->id]);
+
+        $arsip = DokumenArsip::create([
+            'kode_arsip'    => 'TGT-001',
+            'nomor_surat'   => '001/TGT',
+            'perihal'       => 'Test Target',
+            'jenis_surat'   => 'masuk',
+            'tanggal_surat' => '2026-11-01',
+            'seksi_id'      => $seksi->id,
+            'dicatat_oleh'  => $staf->id,
+        ]);
+
+        $this->actingAs($staf)
+            ->withHeaders(['X-Inertia' => 'true'])
+            ->put("/arsip/{$arsip->id}", [
+                'kode_arsip'    => 'TGT-001',
+                'nomor_surat'   => '001/TGT',
+                'perihal'       => 'Test Target Updated',
+                'jenis_surat'   => 'masuk',
+                'tanggal_surat' => '2026-11-01',
+                'seksi_id'      => $seksi->id,
+            ]);
+
+        $this->assertDatabaseHas('activity_logs', [
+            'user_id'     => $staf->id,
+            'action'      => 'arsip.update',
+            'target_type' => 'dokumen',
+            'target_id'   => $arsip->id,
+        ]);
+
+        $log = \App\Models\ActivityLog::where('user_id', $staf->id)
+            ->where('action', 'arsip.update')
+            ->latest()->first();
+
+        $this->assertSame('001/TGT', $log->target_label);
+    }
+
+    public function test_arsip_store_sets_target(): void
+    {
+        $seksi = Seksi::create(['nama_seksi' => 'Seksi Test Store']);
+        $staf  = User::factory()->create(['role' => 'staf', 'seksi_id' => $seksi->id]);
+
+        $this->actingAs($staf)->post('/arsip', [
+            'kode_arsip'    => 'TGT-STORE-001',
+            'nomor_surat'   => '002/TGT',
+            'perihal'       => 'Test Store Target',
+            'jenis_surat'   => 'masuk',
+            'tanggal_surat' => '2026-11-01',
+            'seksi_id'      => $seksi->id,
+        ]);
+
+        $this->assertDatabaseHas('activity_logs', [
+            'user_id'     => $staf->id,
+            'action'      => 'arsip.store',
+            'target_type' => 'dokumen',
+        ]);
+
+        $log = \App\Models\ActivityLog::where('user_id', $staf->id)
+            ->where('action', 'arsip.store')
+            ->latest()->first();
+
+        $this->assertSame('002/TGT', $log->target_label);
+    }
+
+    public function test_users_store_sets_target(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $seksi = Seksi::create(['nama_seksi' => 'Seksi Test User']);
+
+        $this->actingAs($admin)->post('/users', [
+            'name'     => 'Test User Target',
+            'email'    => 'testtarget@example.com',
+            'password' => 'password',
+            'role'     => 'staf',
+            'seksi_id' => $seksi->id,
+        ]);
+
+        $this->assertDatabaseHas('activity_logs', [
+            'user_id'     => $admin->id,
+            'action'      => 'users.store',
+            'target_type' => 'user',
+        ]);
+
+        $log = \App\Models\ActivityLog::where('user_id', $admin->id)
+            ->where('action', 'users.store')
+            ->latest()->first();
+
+        $this->assertSame('Test User Target', $log->target_label);
+    }
+
+    public function test_rak_update_sets_target(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $seksi = Seksi::create(['nama_seksi' => 'Seksi Test Rak']);
+        $lokasi = \App\Models\LokasiArsip::create([
+            'kode_lokasi' => 'LOC-TGT',
+            'nama_lokasi' => 'Test Location',
+            'is_active'   => true,
+        ]);
+        $rak = \App\Models\RakArsip::create([
+            'lokasi_id' => $lokasi->id,
+            'seksi_id'  => $seksi->id,
+            'kode_rak'  => 'RAK-TGT-001',
+            'nama_rak'  => 'Test Rack',
+            'nomor_rak' => '1',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)->put("/rak/{$rak->id}", [
+            'kode_rak'  => 'RAK-TGT-001',
+            'nama_rak'  => 'Test Rack Updated',
+            'lokasi_id' => $lokasi->id,
+            'seksi_id'  => $seksi->id,
+            'nomor_rak' => '1',
+            'is_active' => true,
+        ]);
+
+        $this->assertDatabaseHas('activity_logs', [
+            'user_id'     => $admin->id,
+            'action'      => 'rak.update',
+            'target_type' => 'rak',
+            'target_id'   => $rak->id,
+        ]);
+
+        $log = \App\Models\ActivityLog::where('user_id', $admin->id)
+            ->where('action', 'rak.update')
+            ->latest()->first();
+
+        $this->assertSame('RAK-TGT-001', $log->target_label);
     }
 }

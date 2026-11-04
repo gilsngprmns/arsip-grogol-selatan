@@ -43,7 +43,7 @@ const onFound = (arsip) => {
             </div>
         </template>
 
-        <div class="mx-auto max-w-2xl space-y-4">
+        <div v-reveal class="mx-auto max-w-2xl space-y-4">
             <div class="grid grid-cols-2 rounded-xl bg-slate-100 p-1 text-sm font-medium">
                 <button
                     type="button"
@@ -67,9 +67,7 @@ const onFound = (arsip) => {
                 class="flex items-center justify-center gap-2 rounded-xl bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
             >
                 Buka Detail Arsip
-                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <AppIcon name="chevron-right" :size="16" :stroke-width="2" class="h-4 w-4" decorative />
             </Link>
         </div>
     </AppLayout>

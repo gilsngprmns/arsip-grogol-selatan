@@ -4,9 +4,13 @@ import PublicLayout from '@/Layouts/PublicLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
-defineProps({
+const props = defineProps({
     canLogin: {
         type: Boolean,
+    },
+    faq: {
+        type: Array,
+        default: () => [],
     },
 });
 
@@ -15,33 +19,15 @@ const query = ref('');
 const hasPhone = computed(() => Boolean(institution.phone?.trim()));
 const hasEmail = computed(() => Boolean(institution.email?.trim()));
 
-/** FAQ fokus operasional — eligibility sudah di atas, tidak diulang di sini */
-const faqs = [
-    {
-        question: 'Bagaimana cara mendapatkan akun?',
-        answer: institution.accountHowTo,
-    },
-    {
-        question: 'Saya lupa kata sandi. Apa yang harus dilakukan?',
-        answer: institution.passwordHelp,
-    },
-    {
-        question: 'Di mana saya melihat cara mengarsipkan dokumen?',
-        answer:
-            'Langkah kerja ada di halaman Prosedur. Halaman Manfaat menjelaskan kegunaan sistem dalam tugas sehari-hari.',
-    },
-];
-
 const filteredFaqs = computed(() => {
     const q = query.value.trim().toLowerCase();
-    if (!q) return faqs.map((faq, index) => ({ ...faq, originalIndex: index }));
-    return faqs
-        .map((faq, index) => ({ ...faq, originalIndex: index }))
-        .filter(
-            (faq) =>
-                faq.question.toLowerCase().includes(q) ||
-                faq.answer.toLowerCase().includes(q),
-        );
+    const items = props.faq.map((f, index) => ({ ...f, originalIndex: index }));
+    if (!q) return items;
+    return items.filter(
+        (f) =>
+            f.pertanyaan.toLowerCase().includes(q) ||
+            f.jawaban.toLowerCase().includes(q),
+    );
 });
 
 const toggle = (originalIndex) => {
@@ -73,24 +59,21 @@ const noResults = computed(
         <section class="border-b border-slate-100 bg-white shadow-sm">
             <div class="mx-auto w-full max-w-3xl px-6 py-20 lg:py-28">
                 <h1
+                    v-reveal
                     class="text-center font-display text-4xl font-bold leading-[1.15] tracking-tight text-brand-navy md:text-5xl lg:text-6xl"
                 >
                     Bantuan untuk petugas
                 </h1>
 
                 <!-- Search bar -->
-                <div class="relative mt-8">
-                    <svg
-                        aria-hidden="true"
+                <div v-reveal :style="{ transitionDelay: '100ms' }" class="relative mt-8">
+                    <AppIcon
+                        name="search"
+                        :size="20"
+                        :stroke-width="2"
                         class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <circle cx="11" cy="11" r="7" />
-                        <path stroke-linecap="round" d="M20 20l-3.5-3.5" />
-                    </svg>
+                        decorative
+                    />
                     <input
                         v-model="query"
                         type="search"
@@ -100,7 +83,7 @@ const noResults = computed(
                 </div>
 
                 <!-- Ketentuan akses akun -->
-                <div class="mt-10">
+                <div v-reveal :style="{ transitionDelay: '200ms' }" class="mt-10">
                     <h2 class="text-base font-semibold text-brand-navy">
                         Ketentuan akses akun
                     </h2>
@@ -110,7 +93,7 @@ const noResults = computed(
                 </div>
 
                 <!-- Seamless Accordion -->
-                <div class="mt-10">
+                <div v-reveal :style="{ transitionDelay: '300ms' }" class="mt-10">
                     <div
                         v-if="noResults"
                         class="py-8 text-center text-sm text-slate-500"
@@ -136,27 +119,20 @@ const noResults = computed(
                                 <span
                                     class="text-base font-semibold tracking-tight text-brand-navy"
                                 >
-                                    {{ faq.question }}
+                                    {{ faq.pertanyaan }}
                                 </span>
-                                <svg
+                                <AppIcon
+                                    name="chevron-down"
+                                    :size="20"
+                                    :stroke-width="2"
                                     :class="[
                                         'h-5 w-5 shrink-0 text-slate-400 transition-transform duration-300',
                                         openIndex === faq.originalIndex
                                             ? 'rotate-180 text-brand-blue'
                                             : '',
                                     ]"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    aria-hidden="true"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="M6 9l6 6 6-6"
-                                    />
-                                </svg>
+                                    decorative
+                                />
                             </button>
                             <div
                                 :class="[
@@ -168,7 +144,7 @@ const noResults = computed(
                             >
                                 <div class="overflow-hidden">
                                     <p class="pr-10 text-sm leading-7 text-slate-500">
-                                        {{ faq.answer }}
+                                        {{ faq.jawaban }}
                                     </p>
                                 </div>
                             </div>
@@ -178,6 +154,8 @@ const noResults = computed(
 
                 <!-- Kontak admin -->
                 <div
+                    v-reveal
+                    :style="{ transitionDelay: '400ms' }"
                     class="mt-12 rounded-2xl border border-slate-100/50 bg-slate-50 p-6 shadow-sm"
                 >
                     <h2

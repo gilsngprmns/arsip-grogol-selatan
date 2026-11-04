@@ -123,10 +123,10 @@ const closeLogoLightbox = () => {
                     <Link :href="route('home')" class="rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue/40">
                         <span class="min-w-0">
                             <span class="block text-sm font-bold tracking-tight text-brand-navy">
-                                {{ institution.systemName }}
+                                {{ institution.headerTitle }}
                             </span>
                             <span class="block truncate text-xs text-slate-500">
-                                {{ institution.name }}
+                                {{ institution.headerSubtitle }}
                             </span>
                         </span>
                     </Link>
@@ -166,26 +166,22 @@ const closeLogoLightbox = () => {
                         aria-label="Buka menu navigasi"
                         @click="mobileOpen = !mobileOpen"
                     >
-                        <svg
+                        <AppIcon
                             v-if="!mobileOpen"
-                            viewBox="0 0 24 24"
+                            name="menu"
+                            :size="20"
+                            :stroke-width="1.8"
                             class="h-5 w-5"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                        >
-                            <path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16" />
-                        </svg>
-                        <svg
+                            decorative
+                        />
+                        <AppIcon
                             v-else
-                            viewBox="0 0 24 24"
+                            name="close"
+                            :size="20"
+                            :stroke-width="1.8"
                             class="h-5 w-5"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                        >
-                            <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
-                        </svg>
+                            decorative
+                        />
                     </button>
                 </div>
             </div>

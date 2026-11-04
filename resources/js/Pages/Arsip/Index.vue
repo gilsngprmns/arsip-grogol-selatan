@@ -9,7 +9,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import PrintLabelModal from '@/Components/PrintLabelModal.vue';
 import SirkulasiModal from '@/Components/SirkulasiModal.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const props = defineProps({
@@ -483,7 +483,6 @@ onUnmounted(() => {
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <div class="h-10 w-32 rounded-xl bg-slate-200" />
-                    <div class="h-10 w-32 rounded-xl bg-slate-200" />
                 </div>
             </div>
         </template>
@@ -508,7 +507,7 @@ onUnmounted(() => {
                     <button
                         v-if="selectedIds.length > 0"
                         type="button"
-                        class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 sm:flex-none"
+                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 sm:flex-none"
                         @click="bulkDelete"
                     >
                         <AppIcon name="trash" :size="16" :stroke-width="2" decorative />
@@ -516,20 +515,13 @@ onUnmounted(() => {
                     </button>
                     <button
                         type="button"
-                        class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-sm hover:bg-slate-50 sm:flex-none"
+                        class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-sm hover:bg-slate-50 sm:flex-none"
                         title="Unduh daftar sesuai filter aktif"
                         @click="exportCsv"
                     >
                         <AppIcon name="download" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
                         Ekspor CSV
                     </button>
-                    <Link
-                        :href="route('arsip.create')"
-                        class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 sm:flex-none"
-                    >
-                        <AppIcon name="file-plus" :size="16" :stroke-width="2" decorative />
-                        Tambah Dokumen
-                    </Link>
                 </div>
             </div>
         </template>
@@ -781,7 +773,7 @@ onUnmounted(() => {
                     v-model="settersediaKeterangan"
                     rows="3"
                     class="mt-1 block w-full rounded-xl border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
-                    placeholder="Contoh: Ditemukan kembali di rak PEM-3"
+                    placeholder="Contoh: Ditemukan kembali di tempat penyimpanan"
                 />
             </div>
 
@@ -822,7 +814,7 @@ onUnmounted(() => {
                     v-model="hilangKeterangan"
                     rows="3"
                     class="mt-1 block w-full rounded-xl border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
-                    placeholder="Contoh: Tidak ditemukan saat pengecekan rak, masih dicari"
+                    placeholder="Contoh: Belum ditemukan saat pengecekan, masih dalam proses pencarian"
                 />
             </div>
 

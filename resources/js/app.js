@@ -5,6 +5,8 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+import { reveal } from './directives/reveal';
+import AppIcon from './Components/AppIcon.vue';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Arsip Dokumen Grogol Selatan';
 
@@ -19,6 +21,8 @@ createInertiaApp({
         return createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
+            .directive('reveal', reveal)
+            .component('AppIcon', AppIcon)
             .mount(el);
     },
     progress: {

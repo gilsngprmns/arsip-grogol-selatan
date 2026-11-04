@@ -21,6 +21,7 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
+        "@lucide/vue": "^1.66.0",
         "html5-qrcode": "^2.3.8"
     }
 }

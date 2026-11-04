@@ -52,7 +52,7 @@ class DashboardOperationsTest extends TestCase
             'user_id' => $admin->id,
             'jenis_aksi' => 'dipinjam',
             'pihak_terkait' => 'Budi Santoso',
-            'waktu_aksi' => now()->subDays(9),
+            'waktu_aksi' => now(),
         ]);
 
         DokumenArsip::create([
@@ -131,7 +131,7 @@ class DashboardOperationsTest extends TestCase
             'user_id' => $staff->id,
             'jenis_aksi' => 'dipinjam',
             'pihak_terkait' => 'Staf Pelayanan',
-            'waktu_aksi' => now()->subDays(1),
+            'waktu_aksi' => now(),
         ]);
 
         DokumenArsip::create([
@@ -178,8 +178,8 @@ class DashboardOperationsTest extends TestCase
 
     public function test_arsip_index_supports_tanpa_lokasi_and_terlambat_filters(): void
     {
-        $user = User::factory()->create(['role' => 'staf']);
         $seksi = Seksi::create(['nama_seksi' => 'Pelayanan']);
+        $user = User::factory()->create(['role' => 'staf', 'seksi_id' => $seksi->id]);
         $lokasi = LokasiArsip::create([
             'kode_lokasi' => 'LOC-001',
             'nama_lokasi' => 'Ruang Arsip',
@@ -328,8 +328,8 @@ class DashboardOperationsTest extends TestCase
 
     public function test_arsip_index_supports_data_health_filters(): void
     {
-        $user = User::factory()->create(['role' => 'staf']);
         $seksi = Seksi::create(['nama_seksi' => 'Pelayanan']);
+        $user = User::factory()->create(['role' => 'staf', 'seksi_id' => $seksi->id]);
 
         DokumenArsip::create([
             'kode_arsip' => 'ARSIP-NO-FILE',

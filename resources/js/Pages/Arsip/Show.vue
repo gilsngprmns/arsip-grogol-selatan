@@ -248,7 +248,7 @@ const openKembalikan = () => {
         </template>
 
         <div class="mx-auto grid max-w-5xl gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-start">
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div v-reveal class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <section v-if="identitasFields.length">
                     <h2 class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
                         Identitas Surat
@@ -329,7 +329,7 @@ const openKembalikan = () => {
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-4">
+            <div v-reveal :style="{ transitionDelay: '100ms' }" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-4">
                 <div class="flex items-center justify-between gap-3">
                     <h3 class="text-sm font-semibold text-slate-800">Riwayat Sirkulasi</h3>
                     <span v-if="allRiwayat.length" class="text-xs text-slate-400">

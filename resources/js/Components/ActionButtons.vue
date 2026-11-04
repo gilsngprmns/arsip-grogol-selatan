@@ -42,10 +42,7 @@ const menuItem =
             aria-label="Lihat detail dokumen"
             @click="emit('view', arsip)"
         >
-            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-                <circle cx="12" cy="12" r="3" />
-            </svg>
+            <AppIcon name="eye" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
         </button>
 
         <button
@@ -55,10 +52,7 @@ const menuItem =
             aria-label="Edit data arsip"
             @click="emit('edit', arsip)"
         >
-            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 20h9" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.5a2.1 2.1 0 013 3L8 18l-4 1 1-4 11.5-11.5z" />
-            </svg>
+            <AppIcon name="edit" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
         </button>
 
         <button
@@ -70,11 +64,7 @@ const menuItem =
             @click="emit('pinjam', arsip)"
         >
             <!-- Ikon: dokumen dengan panah keluar (pinjam keluar) -->
-            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 12v5m0 0l-2-2m2 2l2-2" />
-            </svg>
+            <AppIcon name="file-down" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
         </button>
         <button
             v-if="arsip.status_arsip === 'dipinjam'"
@@ -84,10 +74,7 @@ const menuItem =
             aria-label="Kembalikan dokumen"
             @click="emit('kembalikan', arsip)"
         >
-            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 14l-4-4 4-4" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 10h9a5 5 0 010 10h-3" />
-            </svg>
+            <AppIcon name="kembalikan" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
         </button>
 
         <button
@@ -99,10 +86,7 @@ const menuItem =
             @click="emit('settersedia', arsip)"
         >
             <!-- Ikon: centang dalam lingkaran (kembali tersedia) -->
-            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                <circle cx="12" cy="12" r="9" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.5 12l2 2 5-5" />
-            </svg>
+            <AppIcon name="tersedia" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
         </button>
 
         <button
@@ -114,11 +98,7 @@ const menuItem =
             @click="emit('tandahilang', arsip)"
         >
             <!-- Ikon: dokumen dengan tanda hilang (garis coret diagonal) -->
-            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5" />
-                <path stroke-linecap="round" d="M8 14l8 4M16 14l-8 4" />
-            </svg>
+            <AppIcon name="hilang" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
         </button>
 
         <Dropdown v-if="showDropdown" align="right" width="48">
@@ -130,11 +110,7 @@ const menuItem =
                     aria-label="Menu tindakan lain"
                     aria-haspopup="menu"
                 >
-                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor">
-                        <circle cx="5" cy="12" r="1.6" />
-                        <circle cx="12" cy="12" r="1.6" />
-                        <circle cx="19" cy="12" r="1.6" />
-                    </svg>
+                    <AppIcon name="more" :size="16" class="h-4 w-4" decorative />
                 </button>
             </template>
             <template #content>
@@ -146,9 +122,7 @@ const menuItem =
                         role="menuitem"
                         @click="emit('label', arsip)"
                     >
-                        <svg viewBox="0 0 24 24" class="h-4 w-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h4v4H4zM10 7h4v4h-4zM16 7h4v4h-4zM4 13h4v4H4zM10 13h4v4h-4zM16 13h4v4h-4z" />
-                        </svg>
+                        <AppIcon name="grid" :size="16" :stroke-width="1.8" class="h-4 w-4 text-slate-500" decorative />
                         Cetak Label
                     </button>
                     <button
@@ -157,9 +131,7 @@ const menuItem =
                         role="menuitem"
                         @click="emit('delete', arsip)"
                     >
-                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" d="M4 7h16M9 7V5h6v2M8 7l1 12h6l1-12" />
-                        </svg>
+                        <AppIcon name="trash" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
                         Hapus
                     </button>
                 </div>

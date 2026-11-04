@@ -27,6 +27,9 @@ const qrUrl = computed(() => {
     return `/storage/${props.arsip.qr_code_path}`;
 });
 
+// QR image error state
+const qrImageError = ref(false);
+
 const formatDate = (value) => (value ? String(value).substring(0, 10) : '—');
 
 const seksiLabel = computed(() => {
@@ -480,9 +483,7 @@ const downloadPng = async () => {
                         aria-label="Tutup"
                         @click="emit('close')"
                     >
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
-                        </svg>
+                        <AppIcon name="close" :size="20" :stroke-width="2" class="h-5 w-5" decorative />
                     </button>
                 </div>
             </div>
@@ -510,6 +511,7 @@ const downloadPng = async () => {
                             <img
                                 v-if="qrUrl"
                                 :src="qrUrl"
+                                @error="qrImageError = true"
                                 :alt="`QR ${arsip.kode_arsip}`"
                                 class="h-full w-full object-contain"
                             />
@@ -563,9 +565,7 @@ const downloadPng = async () => {
                             @click="downloadPng"
                         >
                             <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-brand-navy transition group-hover:bg-brand-navy group-hover:text-white">
-                                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v10m0 0l-3.5-3.5M12 14l3.5-3.5M5 18h14" />
-                                </svg>
+                                <AppIcon name="download" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
                             </span>
                             <span class="text-left leading-tight">
                                 <span class="block text-sm">{{ busy ? 'Menyiapkan…' : 'Unduh Stiker' }}</span>
@@ -580,10 +580,7 @@ const downloadPng = async () => {
                             @click="printLabel"
                         >
                             <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 transition group-hover:bg-white/25">
-                                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 8V5a1 1 0 011-1h8a1 1 0 011 1v3M7 17h10v3a1 1 0 01-1 1H8a1 1 0 01-1-1v-3zM5 8h14a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2z" />
-                                    <circle cx="17" cy="12" r="1" fill="currentColor" />
-                                </svg>
+                                <AppIcon name="print" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
                             </span>
                             <span class="text-left leading-tight">
                                 <span class="block text-sm">Cetak Printer</span>

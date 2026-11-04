@@ -2,6 +2,10 @@
 export const institution = {
     name: 'Kelurahan Grogol Selatan',
     systemName: 'Arsip Dokumen',
+    /** Judul + sub-judul blok teks header situs, mengikuti papan nama kantor
+     *  (hijau tua di dinding): baris tebal = kantor, baris kecil = pemerintah. */
+    headerTitle: 'Kantor Lurah Grogol Selatan',
+    headerSubtitle: 'Pemerintah Provinsi DKI Jakarta · Kota Administrasi Jakarta Selatan',
     /** Judul lengkap untuk hero / dokumen resmi */
     fullTitle: 'Arsip Dokumen Grogol Selatan',
     district: 'Kecamatan Kebayoran Lama',

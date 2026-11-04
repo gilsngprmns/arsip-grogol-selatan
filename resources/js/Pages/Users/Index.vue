@@ -1,6 +1,7 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ConfirmModal from '@/Components/ConfirmModal.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 import Modal from '@/Components/Modal.vue';
 import UserActionButtons from '@/Components/UserActionButtons.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
@@ -293,9 +294,7 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
                     :href="route('reports.users')"
                     class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-sm hover:bg-slate-50"
                 >
-                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M5 20h14" />
-                    </svg>
+                    <AppIcon name="download" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
                     Unduh laporan user
                 </a>
             </div>
@@ -325,7 +324,7 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
             {{ pageError }}
         </div>
 
-        <div class="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div v-reveal class="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <h2 class="text-base font-semibold text-slate-800">Tambah Pengguna</h2>
 
             <div class="mt-3 space-y-3">
@@ -334,11 +333,11 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
                     <div class="mt-2 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">Nama lengkap</label>
-                            <input v-model="createForm.name" type="text" :class="inputClass">
+                            <input v-model="createForm.name" type="text" :class="inputClass" placeholder="Contoh: Ahmad Fauzi">
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">Email</label>
-                            <input v-model="createForm.email" type="email" :class="inputClass">
+                            <input v-model="createForm.email" type="email" :class="inputClass" placeholder="Contoh: user@example.com">
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">Password</label>
@@ -356,13 +355,8 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
                                     :aria-label="showCreatePassword ? 'Sembunyikan password' : 'Tampilkan password'"
                                     @click="showCreatePassword = !showCreatePassword"
                                 >
-                                    <svg v-if="!showCreatePassword" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-                                        <circle cx="12" cy="12" r="3" />
-                                    </svg>
-                                    <svg v-else viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18M10.6 10.6a3 3 0 004.2 4.2M9.9 5.1A10.4 10.4 0 0112 5c6.5 0 10 7 10 7a18.4 18.4 0 01-3.3 4.2M6.1 6.1A18.5 18.5 0 002 12s3.5 7 10 7a10.4 10.4 0 004.1-.8" />
-                                    </svg>
+                                    <AppIcon v-if="!showCreatePassword" name="eye" :size="20" :stroke-width="1.8" class="h-5 w-5" decorative />
+                                    <AppIcon v-else name="eye-off" :size="20" :stroke-width="1.8" class="h-5 w-5" decorative />
                                 </button>
                             </div>
                             <p class="mt-0.5 text-xs text-slate-500">Minimal 8 karakter.</p>
@@ -425,7 +419,7 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
             </div>
         </div>
 
-        <div class="mb-4 flex flex-col gap-2.5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:flex-row md:flex-wrap md:items-center md:gap-3 md:p-4">
+        <div v-reveal :style="{ transitionDelay: '100ms' }" class="mb-4 flex flex-col gap-2.5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:flex-row md:flex-wrap md:items-center md:gap-3 md:p-4">
             <input
                 v-model="filters.q"
                 type="search"
@@ -457,8 +451,68 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
             </button>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div class="overflow-x-auto overflow-y-clip p-4">
+        <div v-reveal :style="{ transitionDelay: '200ms' }" class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <!-- Mobile / tablet: card list (< lg) -->
+            <div class="lg:hidden">
+                <EmptyState
+                    v-if="!userRows.length"
+                    :title="emptyMessage"
+                    :description="emptyDescription"
+                />
+                <ul v-else class="divide-y divide-slate-100">
+                    <li
+                        v-for="user in userRows"
+                        :key="`card-${user.id}`"
+                        class="px-4 py-4"
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="font-semibold text-slate-800">{{ user.name }}</span>
+                                    <span class="inline-flex rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 ring-1 ring-inset ring-slate-200">
+                                        {{ roleLabel(user.role) }}
+                                    </span>
+                                </div>
+                                <p class="mt-0.5 text-sm text-slate-500 truncate">{{ user.email }}</p>
+                                <p class="mt-0.5 text-xs text-slate-400">
+                                    {{ user.seksi?.nama_seksi || 'Tanpa seksi' }}
+                                </p>
+                            </div>
+                            <div class="flex shrink-0 items-center gap-2">
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700 ring-1 ring-inset ring-slate-200">
+                                    <span
+                                        class="h-1.5 w-1.5 rounded-full"
+                                        :class="user.is_active ? 'bg-emerald-500' : 'bg-slate-400'"
+                                    />
+                                    {{ user.is_active ? 'Aktif' : 'Nonaktif' }}
+                                </span>
+                                <UserActionButtons
+                                    :user="user"
+                                    :can-deactivate="canDeactivateUser(user)"
+                                    @edit="openEdit"
+                                    @delete-permanent="deletePermanent"
+                                    @reset-password="openResetPassword"
+                                />
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+                <div
+                    v-if="!userRows.length && hasActiveFilters"
+                    class="px-4 py-4"
+                >
+                    <button
+                        type="button"
+                        class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                        @click="resetFilters"
+                    >
+                        Reset filter
+                    </button>
+                </div>
+            </div>
+
+            <!-- Desktop: table (≥ lg) -->
+            <div class="hidden overflow-x-auto overflow-y-clip lg:block">
                 <table class="min-w-full text-left text-sm">
                     <thead>
                         <tr class="border-b border-slate-200 text-slate-600">
@@ -503,11 +557,7 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
                             <td colspan="6" class="px-3 py-12 text-center">
                                 <div class="mx-auto flex max-w-sm flex-col items-center gap-3">
                                     <span class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-                                        <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2" />
-                                            <circle cx="10" cy="7" r="4" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21v-2a3.5 3.5 0 00-2.5-3.35M16 3.13a3.5 3.5 0 010 6.74" />
-                                        </svg>
+                                        <AppIcon name="users" :size="24" :stroke-width="1.6" class="h-6 w-6" decorative />
                                     </span>
                                     <div>
                                         <p class="text-sm font-semibold text-slate-700">{{ emptyMessage }}</p>
@@ -530,6 +580,7 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
                 </table>
             </div>
 
+            <!-- Pagination (shared) -->
             <div
                 v-if="pagination.last_page > 1"
                 class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3"
@@ -569,9 +620,7 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
                         <p class="mt-0.5 text-sm text-slate-500">{{ editingUser?.email }}</p>
                     </div>
                     <button type="button" class="rounded-md p-1 text-slate-400 hover:bg-slate-100" aria-label="Tutup" @click="closeEdit">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
-                        </svg>
+                        <AppIcon name="close" :size="20" :stroke-width="2" class="h-5 w-5" decorative />
                     </button>
                 </div>
 
@@ -581,11 +630,11 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
                         <div class="mt-3 grid gap-4 sm:grid-cols-2">
                             <div class="sm:col-span-2">
                                 <label class="mb-1 block text-sm font-medium text-slate-700">Nama lengkap</label>
-                                <input v-model="editForm.name" type="text" :class="inputClass">
+                                <input v-model="editForm.name" type="text" :class="inputClass" placeholder="Contoh: Ahmad Fauzi">
                             </div>
                             <div class="sm:col-span-2">
                                 <label class="mb-1 block text-sm font-medium text-slate-700">Email</label>
-                                <input v-model="editForm.email" type="email" :class="inputClass">
+                                <input v-model="editForm.email" type="email" :class="inputClass" placeholder="Contoh: user@example.com">
                             </div>
                         </div>
                     </section>
@@ -678,9 +727,7 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
                         <p class="mt-0.5 text-sm text-slate-500">{{ resetTarget?.name }} · {{ resetTarget?.email }}</p>
                     </div>
                     <button type="button" class="rounded-md p-1 text-slate-400 hover:bg-slate-100" aria-label="Tutup" @click="closeResetPassword">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
-                        </svg>
+                        <AppIcon name="close" :size="20" :stroke-width="2" class="h-5 w-5" decorative />
                     </button>
                 </div>
 
@@ -701,13 +748,8 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
                                 :aria-label="showPasswordValue ? 'Sembunyikan password' : 'Tampilkan password'"
                                 @click="showPasswordValue = !showPasswordValue"
                             >
-                                <svg v-if="!showPasswordValue" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-                                    <circle cx="12" cy="12" r="3" />
-                                </svg>
-                                <svg v-else viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18M10.6 10.6a3 3 0 004.2 4.2M9.9 5.1A10.4 10.4 0 0112 5c6.5 0 10 7 10 7a18.4 18.4 0 01-3.3 4.2M6.1 6.1A18.5 18.5 0 002 12s3.5 7 10 7a10.4 10.4 0 004.1-.8" />
-                                </svg>
+                                <AppIcon v-if="!showPasswordValue" name="eye" :size="20" :stroke-width="1.8" class="h-5 w-5" decorative />
+                                <AppIcon v-else name="eye-off" :size="20" :stroke-width="1.8" class="h-5 w-5" decorative />
                             </button>
                         </div>
                         <p class="mt-1 text-xs text-slate-500">Minimal 8 karakter.</p>
@@ -728,13 +770,8 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
                                 :aria-label="showPasswordConfirm ? 'Sembunyikan password' : 'Tampilkan password'"
                                 @click="showPasswordConfirm = !showPasswordConfirm"
                             >
-                                <svg v-if="!showPasswordConfirm" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-                                    <circle cx="12" cy="12" r="3" />
-                                </svg>
-                                <svg v-else viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18M10.6 10.6a3 3 0 004.2 4.2M9.9 5.1A10.4 10.4 0 0112 5c6.5 0 10 7 10 7a18.4 18.4 0 01-3.3 4.2M6.1 6.1A18.5 18.5 0 002 12s3.5 7 10 7a10.4 10.4 0 004.1-.8" />
-                                </svg>
+                                <AppIcon v-if="!showPasswordConfirm" name="eye" :size="20" :stroke-width="1.8" class="h-5 w-5" decorative />
+                                <AppIcon v-else name="eye-off" :size="20" :stroke-width="1.8" class="h-5 w-5" decorative />
                             </button>
                         </div>
                     </div>

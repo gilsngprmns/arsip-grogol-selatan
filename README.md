@@ -9,6 +9,10 @@
 
 ## Arsip Dokumen Grogol Selatan
 
+> **Setup:** setelah `composer install` (atau setiap reset environment), jalankan
+> `php artisan storage:link` — symlink `public/storage → storage/app/public` di-gitignore,
+> tanpa ini semua URL gambar `/storage/*` (foto profil, QR stiker, lampiran) akan gagal dimuat.
+
 Sistem informasi arsip (SIP) — kelola arsip, lokasi/rak, sirkulasi, QR, cadangan & pemulihan.
 
 **Runbook cadangan & pemulihan (admin):** [docs/PROSEDUR-PULIH-ARSIP.md](docs/PROSEDUR-PULIH-ARSIP.md)

@@ -182,6 +182,7 @@ const runNow = () => {
 
         <div
             v-if="backupResult"
+            v-reveal
             class="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
         >
             <div class="flex flex-wrap items-center justify-between gap-2">
@@ -245,7 +246,7 @@ const runNow = () => {
 
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <!-- Kartu 1: Unduh + buat cadangan lengkap -->
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div v-reveal class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h2 class="text-lg font-semibold text-slate-800">Cadangkan Data</h2>
                 <p class="mt-2 text-sm text-slate-500">
                     <span class="font-medium">Backup JSON</span> (ringkas, data saja) atau
@@ -271,7 +272,7 @@ const runNow = () => {
             </div>
 
             <!-- Kartu 2: Pulihkan -->
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div v-reveal :style="{ transitionDelay: '100ms' }" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h2 class="text-lg font-semibold text-slate-800">Pulihkan Data (Restore)</h2>
                 <p class="mt-2 text-sm text-slate-500">
                     Unggah file cadangan (<span class="font-medium">.zip</span> lengkap atau
@@ -304,7 +305,7 @@ const runNow = () => {
         </div>
 
         <!-- Daftar cadangan tersimpan -->
-        <div class="mt-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div v-reveal :style="{ transitionDelay: '200ms' }" class="mt-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 class="text-lg font-semibold text-slate-800">Cadangan Tersimpan</h2>
             <p class="mt-1 text-sm text-slate-500">
                 Cadangan terjadwal harian disimpan di server ini (retensi 14 hari).

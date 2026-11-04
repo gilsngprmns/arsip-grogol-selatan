@@ -6,31 +6,11 @@ defineProps({
     canLogin: {
         type: Boolean,
     },
+    alurKerja: {
+        type: Array,
+        default: () => [],
+    },
 });
-
-const steps = [
-    {
-        number: '1',
-        title: 'Catat dokumen',
-        description:
-            'Isi data surat (nomor, tanggal, perihal) dan unggah berkas pindaian bila tersedia.',
-        result: 'Dokumen tercatat di sistem.',
-    },
-    {
-        number: '2',
-        title: 'Tetapkan lokasi penyimpanan',
-        description:
-            'Pilih ruang, rak, dan boks sesuai tempat fisik berkas, lalu simpan penempatan tersebut.',
-        result: 'Lokasi dokumen diketahui saat dibutuhkan.',
-    },
-    {
-        number: '3',
-        title: 'Kelola peminjaman dan penelusuran',
-        description:
-            'Cari dokumen lewat pencarian, catat peminjaman bila dipinjam, dan kembalikan setelah selesai dipakai.',
-        result: 'Status dan riwayat dokumen tetap terpantau.',
-    },
-];
 </script>
 
 <template>
@@ -57,6 +37,7 @@ const steps = [
         <section class="border-b border-slate-100 bg-white shadow-sm">
             <div class="mx-auto w-full max-w-3xl px-6 py-20 lg:py-28">
                 <h1
+                    v-reveal
                     class="text-center font-display text-4xl font-bold leading-[1.15] tracking-tight text-brand-navy md:text-5xl lg:text-6xl"
                 >
                     Cara mengarsipkan dokumen
@@ -64,37 +45,37 @@ const steps = [
 
                 <ol class="mt-14">
                     <li
-                        v-for="(step, index) in steps"
-                        :key="step.number"
+                        v-for="(step, index) in alurKerja"
+                        :key="step.id"
+                        v-reveal
+                        :style="{ transitionDelay: `${index * 150}ms` }"
                         class="relative pl-16"
-                        :class="index < steps.length - 1 ? 'pb-14' : ''"
+                        :class="index < alurKerja.length - 1 ? 'pb-14' : ''"
                     >
-                        <!-- garis konektor ke langkah berikutnya -->
                         <span
-                            v-if="index < steps.length - 1"
+                            v-if="index < alurKerja.length - 1"
                             aria-hidden="true"
                             class="absolute bottom-0 left-4 top-10 w-px -translate-x-1/2 bg-slate-200"
                         ></span>
 
-                        <!-- node penomoran -->
                         <span
                             aria-hidden="true"
                             class="absolute left-4 top-0 flex h-10 w-10 -translate-x-1/2 items-center justify-center rounded-full bg-brand-navy text-base font-bold text-white ring-4 ring-white"
                         >
-                            {{ step.number }}
+                            {{ step.nomor }}
                         </span>
 
                         <h2
                             class="font-display text-xl font-semibold tracking-tight text-brand-navy"
                         >
-                            {{ step.title }}
+                            {{ step.judul }}
                         </h2>
                         <p class="mt-2 text-base leading-8 text-slate-600">
-                            {{ step.description }}
+                            {{ step.deskripsi }}
                         </p>
-                        <p class="mt-2 text-sm leading-7 text-slate-500">
+                        <p v-if="step.hasil" class="mt-2 text-sm leading-7 text-slate-500">
                             <span class="font-semibold text-slate-700">Hasil:</span>
-                            {{ step.result }}
+                            {{ step.hasil }}
                         </p>
                     </li>
                 </ol>

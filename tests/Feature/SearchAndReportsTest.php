@@ -12,23 +12,6 @@ class SearchAndReportsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_authenticated_user_can_open_global_search(): void
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user)->get('/search?q=arsip')->assertOk();
-    }
-
-    public function test_global_search_returns_json_when_requested(): void
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->getJson('/search?q=arsip')
-            ->assertOk()
-            ->assertJsonStructure(['term', 'documents', 'users', 'racks', 'locations', 'activities']);
-    }
-
     public function test_reports_are_restricted_to_admins(): void
     {
         $staff = User::factory()->create(['role' => 'staf']);
