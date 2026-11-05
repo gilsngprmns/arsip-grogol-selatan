@@ -41,7 +41,7 @@ onBeforeUnmount(() => {
             <!-- Sidebar kiri — skeleton -->
             <aside
                 v-if="isLoading"
-                class="relative hidden overflow-hidden bg-brand-navy px-10 py-10 text-white lg:flex lg:flex-col lg:justify-between xl:px-16"
+                class="relative hidden overflow-hidden bg-brand-navy px-10 py-10 text-white lg:flex lg:flex-col lg:h-full lg:justify-between xl:px-16"
             >
                 <div class="relative flex flex-col items-start gap-3 motion-safe:animate-pulse">
                     <div class="h-11 w-11 rounded-xl bg-slate-600" />
@@ -76,7 +76,7 @@ onBeforeUnmount(() => {
             </aside>
 
             <!-- Sidebar kiri — asli -->
-            <aside v-else class="relative hidden overflow-hidden bg-brand-navy px-10 py-10 text-white flex flex-col h-full justify-between xl:px-16">
+            <aside v-else class="relative hidden overflow-hidden bg-brand-navy px-10 py-10 text-white lg:flex lg:flex-col lg:h-full lg:justify-between xl:px-16">
                 <!-- Background pattern -->
                 <div class="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:34px_34px]" />
 

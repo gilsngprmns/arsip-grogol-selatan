@@ -3,6 +3,12 @@
 Catatan perbaikan bug terverifikasi. Entri baru ditambahkan di ATAS (terbaru → terlama).
 
 <!-- ENTRI BARU DI BAWAH BARIS INI -->
+### Fix #112 — 修复侧边栏 hidden+flex 冲突导致面板不显示
+
+| Tanggal | File | Masalah | Akar | Fix | Verifikasi | Pelajaran | Log Keyword | Deploy |
+|---|---|---|---|---|---|---|---|---|
+| 2026-11-05 | `resources/js/Layouts/GuestLayout.vue` | Fix #111 将 aside 改为 `flex flex-col h-full justify-between` 后，遗漏了 `lg:flex` 响应式前缀，导致 `hidden` 与 `flex` 同时存在，面板在 desktop 也不显示。 | 修复时误将 `lg:flex lg:flex-col lg:justify-between` 替换为 `flex flex-col h-full justify-between`，未保留 `lg:` 前缀。 | 恢复 `lg:flex lg:flex-col lg:h-full lg:justify-between`，确保移动端隐藏、桌面端显示。Skeleton aside 同步修正。 | Vite HMR → `_hoisted_4` class 正确输出 `lg:flex lg:flex-col lg:h-full lg:justify-between`；`_hoisted_14` 仍为 `text-4xl font-bold xl:text-5xl`；center spacer 仍为 `flex-1 flex flex-col justify-center items-center text-center`。 | 修改响应式 class 时，`hidden` + `lg:flex` 是标准响应式显示模式；不可移除 `lg:` 前缀让 `flex` 在移动端也生效。 | `guest-layout sidebar hidden-flex conflict responsive lg:flex fix` | ✅ LIVE 2026-11-05 — Vite HMR success. |
+
 ### Fix #111 — Redesain layout teks judul/subjudul panel kiri login: center + text-4xl/5xl
 
 | Tanggal | File | Masalah | Akar | Fix | Verifikasi | Pelajaran | Log Keyword | Deploy |
