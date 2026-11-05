@@ -189,7 +189,7 @@ const submit = () => {
                         id="kode_rak"
                         v-model="form.kode_rak"
                         class="mt-1 block w-full"
-                        placeholder="Contoh: RAK-001"
+                        placeholder="mis. RAK-PEM-01"
                         required
                     />
                     <InputError class="mt-1" :message="errors.kode_rak" />
@@ -201,7 +201,7 @@ const submit = () => {
                         id="nama_rak"
                         v-model="form.nama_rak"
                         class="mt-1 block w-full"
-                        placeholder="Contoh: Rak Arsip No. 1"
+                        placeholder="mis. Rak No. 1 Seksi Pemerintahan"
                         required
                     />
                     <InputError class="mt-1" :message="errors.nama_rak" />
@@ -228,7 +228,6 @@ const submit = () => {
                         type="number"
                         min="1"
                         class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
-                        placeholder="Contoh: 50 atau 100"
                     />
                     <InputError class="mt-1" :message="errors.kapasitas" />
                 </div>

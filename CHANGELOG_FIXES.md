@@ -3,6 +3,42 @@
 Catatan perbaikan bug terverifikasi. Entri baru ditambahkan di ATAS (terbaru → terlama).
 
 <!-- ENTRI BARU DI BAWAH BARIS INI -->
+### Fix #111 — Redesain layout teks judul/subjudul panel kiri login: center + text-4xl/5xl
+
+| Tanggal | File | Masalah | Akar | Fix | Verifikasi | Pelajaran | Log Keyword | Deploy |
+|---|---|---|---|---|---|---|---|---|
+| 2026-11-05 | `resources/js/Layouts/GuestLayout.vue` | Area teks judul "Arsip Dokumen Grogol Selatan" dan subjudul di panel kiri login tidak di tengah dan ukurannya terlalu kecil (text-xl). User ingin tata letak lebih menonjol dan terpusat. | Layout lama menggunakan max-w-md dengan text alignment kiri; tidak ada flex centering untuk section tengah. | (1) Restruktur panel kiri: ubah lg:flex lg:flex-col lg:justify-between → flex flex-col h-full justify-between agar responsif penuh. (2) Tambah div center spacer: flex-1 flex flex-col justify-center items-center text-center. (3) Perbesar judul: text-4xl font-bold + xl:text-5xl. (4) Akses notice + mission brief: text-center. (5) Subjudul misi: text-base mt-4. | Vite HMR → file ter-reload di http://localhost:5174. Kelas baru terdeteksi di Vite output. | Flexbox centering dengan flex-1 spacer adalah pola yang robust untuk three-section layout; pastikan h-full di aside agar vertical centering bekerja. | `guest-layout login panel-kiri center text-4xl text-5xl judul subjudul restructure` | ✅ LIVE 2026-11-05 — Vite HMR success. |
+
+### Fix #110 — Redesain panel kiri halaman login: watermark, status badge, security notice footer
+
+| Tanggal | File | Masalah | Akar | Fix | Verifikasi | Pelajaran | Log Keyword | Deploy |
+|---|---|---|---|---|---|---|---|---|
+| 2026-11-05 | `resources/js/Layouts/GuestLayout.vue`, `resources/js/Components/AppIcon.vue` | Panel kiri login terlalu padat dengan kotak "PERINGATAN KEAMANAN" di tengah yang merusak hierarki visual. User ingin layout lebih minimalis — area tengah lega, info keamanan + bantuan + versi pindah ke footer bawah. | Layout lama: konten (logo, badge, judul, mission, security card, identityLine, officeHours) ditumpuk tanpa pemisahan zona yang jelas. Watermark ikon tidak ada. | (1) Tambah icon `Lock` ke `AppIcon.vue` REGISTRY. (2) Restruktur panel kiri: logo + badge di atas, judul + mission di tengah (area kosong untuk watermark), footer dengan border-top di bawah berisi security notice (fine print + lock icon), kontak bantuan, dan versi SIMA. (3) Skeleton loading disesuaikan agar placeholder badge + footer konsisten. (4) Hapus styling kartu keamanan (bg-blue-900/30, border-l-4, dll) → ubah jadi teks kecil legal-style. | `npm run build` → **✓ built in 20.74s**. Tidak ada error kompilasi. | Panel kiri yang bersih dengan area tengah kosong membuat watermark transparan lebih terasa dan hierarki visual lebih profesional — khas portal enterprise pemerintahan. Gunakan `mt-auto pt-8 border-t` untuk memisahkan footer secara visual. | `guest-layout login redesign panel-kiri watermark status-badge security-notice footer SIMA v1.0.0` | ✅ LIVE 2026-11-05 — build success. |
+
+### Fix #109 — Disable klik logo + judul + tombol Beranda di halaman login (GuestLayout)
+
+| Tanggal | File | Masalah | Akar | Fix | Verifikasi | Pelajaran | Log Keyword | Deploy |
+|---|---|---|---|---|---|---|---|---|
+| 2026-11-05 | `resources/js/Layouts/GuestLayout.vue` | Logo kelurahan (klik → lightbox) dan judul "Kantor Lurah Grogol Selatan" (Link → `/`) serta tombol "Beranda" di kanan atas masih bisa diklik dan redirect. User ingin area branding di halaman login bersifat statis. | `<button @click="openLogoLightbox()">` pada logo, `<Link href="/">` pada judul, dan `<Link href="/">` pada tombol "Beranda" kanan atas. | (1) Hapus semua handler `@click` / `<button>` pada logo — ganti jadi `<img>` biasa. (2) Ganti `<Link href="/">` judul sidebar/mobile jadi `<span>`. (3) Ganti `<Link href="/">` tombol "Beranda" kanan atas jadi `<span>`. (4) Hapus `lightbox` ref dan fungsi `openLogoLightbox`/`closeLogoLightbox`. (5) Hapus komponen `<ImageLightbox>` dan import-nya. | `npm run build` → **✓ built in 24.41s**. Tidak ada error kompilasi. | Branding area pada halaman guest/login tidak memerlukan interaktivitas; gunakan elemen statis `<img>`/`<span>` untuk menghindari navigasi tidak disengaja. | `guest-layout login disable-klik logo lightbox beranda brand-navy` | ✅ LIVE 2026-11-05 — build success. |
+
+### Fix #108 — Panel "Perlu Diperhatikan" disable klik (henti redirect)
+
+| Tanggal | File | Masalah | Akar | Fix | Verifikasi | Pelajaran | Log Keyword | Deploy |
+|---|---|---|---|---|---|---|---|---|
+| 2026-11-05 | `resources/js/Pages/Dashboard.vue` | Item di panel "Perlu Diperhatikan" (Tanpa Lokasi, Tanpa File Digital, dll) masih berupa `<Link>` Inertia yang bisa di-klik dan redirect. User ingin hanya tampil sebagai info statis, bukan tombol navigasi. | Setiap item alert punya properti `href` yang diisi dari `route('arsip.index', {...})`, dirender dengan `<Link :href="alert.href">`. | Hapus properti `href` dari semua entri array `alerts`. Ganti `<Link>` → `<div>` di template baris v-for alerts. Hapus juga `transition hover:shadow-sm` agar tidak ada efek hover. | `npm run build` → **✓ built in 28.37s**. | Pola yang sama dengan Fix #107: untuk panel info/display, gunakan `<div>` bukan `<Link>`. Angka tetap reaktif dari `props.stats`/`props.notifications`/`props.dataHealth`. | `dashboard alerts perlu-perhatikan disable-klik link div stats` | ✅ LIVE 2026-11-05 — build success. |
+
+### Fix #107 — KPI cards dashboard disable klik (henti redirect)
+
+| Tanggal | File | Masalah | Akar | Fix | Verifikasi | Pelajaran | Log Keyword | Deploy |
+|---|---|---|---|---|---|---|---|---|
+| 2026-11-05 | `resources/js/Pages/Dashboard.vue` | Kartu KPI (Total Dokumen, Tersedia, Dipinjam, Hilang) masih berupa `<Link>` Inertia yang bisa di-klik dan redirect ke halaman Arsip. User ingin kartu hanya menampilkan angka, bukan tombol navigasi. | KPI cards didefinisikan sebagai `kpiCards` computed dengan properti `href` dan dirender pakai `<Link v-for>` dengan class hover-ring. | Ganti `<Link>` → `<div>` statis. Hapus semua properti `href` dari array `kpiCards`. Hapus class `hover:ring-2 hover:ring-brand-blue/20 transition` agar visual tetap tapi tak ada efek klik. | `npm run build` → **✓ built in 29.85s**. Tidak ada error kompilasi. | Untuk card display-only di dashboard, gunakan `<div>` bukan `<Link>`; jangan simpan `href` di data structure kalau tak dipakai. | `dashboard kpi cards disable klik redirect statis` | ✅ LIVE 2026-11-05 — build success. |
+
+### Fix #106 — Lupa kata sandi OTP multi-step: gunakan axios bypass Inertia middleware (hindari 409 Conflict)
+
+| Tanggal | File | Masalah | Akar | Fix | Verifikasi | Pelajaran | Log Keyword | Deploy |
+|---|---|---|---|---|---|---|---|---|
+| 2026-11-04 | `resources/js/Pages/Auth/ForgotPassword.vue` | Submit form OTP mengirim 409 Conflict — Inertia response header bertabrakan dengan JSON response dari controller. | `form.post()` memakai Inertia HTTP client yang meng-asapikan respons Inertia, tetapi `OtpPasswordController` mengembalikan `response()->json()`. | Ganti `form.post()` → `axios.post()` langsung dengan header `X-CSRF-TOKEN` (dari cookie `XSRF-TOKEN`) dan `Accept: application/json`. Pola sama seperti `QrScanner.vue` dan `useStafOnline.js`. | `php artisan test tests/Feature/Auth/PasswordResetTest.php` → **8 passed** (32 assertions). | Gunakan axios langsung untuk endpoint JSON dari dalam halaman Inertia; jangan pakai Inertia form untuk request JSON murni. | `forgot-password otp axios bypass inertia 409 conflict csrf-token cookie` | ✅ LIVE 2026-11-04 — test 8 passed, build perlu jalan. |
+
 ### Fix #105 — Auto-logout 15 menit inaktivitas (keamanan pemerintahan)
 
 | Tanggal | File | Masalah | Akar | Fix | Verifikasi | Pelajaran | Log Keyword | Deploy |

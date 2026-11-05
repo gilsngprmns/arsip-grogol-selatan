@@ -399,13 +399,13 @@ const closeEditLokasi = () => {
 
                 <div>
                     <label class="mb-1 block text-sm font-medium text-slate-700">Kode Rak</label>
-                    <input v-model="rakForm.kode_rak" type="text" placeholder="Contoh: RAK-001" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-700" />
+                    <input v-model="rakForm.kode_rak" type="text" placeholder="mis. RAK-PEM-01" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-700" />
                     <p v-if="inlineRakErrors.kode_rak" class="mt-1 text-xs text-red-600">{{ inlineRakErrors.kode_rak }}</p>
                 </div>
 
                 <div>
                     <label class="mb-1 block text-sm font-medium text-slate-700">Nama Rak</label>
-                    <input v-model="rakForm.nama_rak" type="text" placeholder="Contoh: Rak Arsip No. 1" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-700" />
+                    <input v-model="rakForm.nama_rak" type="text" placeholder="mis. Rak No. 1 Seksi Pemerintahan" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-700" />
                     <p v-if="inlineRakErrors.nama_rak" class="mt-1 text-xs text-red-600">{{ inlineRakErrors.nama_rak }}</p>
                 </div>
 
@@ -417,7 +417,7 @@ const closeEditLokasi = () => {
 
                 <div>
                     <label class="mb-1 block text-sm font-medium text-slate-700">Kapasitas</label>
-                    <input v-model="rakForm.kapasitas" type="number" min="1" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-700" placeholder="Contoh: 50" />
+                    <input v-model="rakForm.kapasitas" type="number" min="1" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-700" />
                     <p v-if="inlineRakErrors.kapasitas" class="mt-1 text-xs text-red-600">{{ inlineRakErrors.kapasitas }}</p>
                 </div>
 
@@ -431,7 +431,7 @@ const closeEditLokasi = () => {
 
             <div class="mt-4">
                 <label class="mb-1 block text-sm font-medium text-slate-700">Deskripsi</label>
-                <textarea v-model="rakForm.deskripsi" rows="3" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-700" placeholder="Tambahkan catatan mengenai rak (opsional)..."></textarea>
+                <textarea v-model="rakForm.deskripsi" rows="3" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-700"></textarea>
                 <p v-if="inlineRakErrors.deskripsi" class="mt-1 text-xs text-red-600">{{ inlineRakErrors.deskripsi }}</p>
             </div>
 

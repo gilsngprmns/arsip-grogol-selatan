@@ -19,7 +19,7 @@ class ReportController extends Controller
     {
         return $this->csv('laporan-aktivitas', ['waktu', 'pengguna', 'aksi', 'keterangan', 'target', 'ip'], function ($handle) use ($request): void {
             ActivityLog::query()->with('user:id,name')
-                ->whereNotIn('route_name', ['password.email', 'password.store', 'password.confirm', 'verification.send'])
+                ->whereNotIn('route_name', ['password.request', 'password.otp.send', 'password.otp.verify', 'password.otp.reset', 'password.confirm', 'verification.send'])
                 ->filterByRequest($request)->latest()->chunk(200, function ($rows) use ($handle): void {
                 foreach ($rows as $row) {
                     // Zona Asia/Jakarta agar konsisten dengan tampilan halaman

@@ -147,8 +147,10 @@ const submit = () => {
         <div v-reveal class="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <form class="space-y-4" @submit.prevent="submit">
                 <div>
-                    <InputLabel for="kode_arsip" value="Kode Arsip" />
-                    <TextInput id="kode_arsip" v-model="form.kode_arsip" class="mt-1 block w-full rounded-xl" required placeholder="Contoh: ARS-001" />
+                    <label for="kode_arsip" class="block text-sm font-medium text-gray-700">
+                        Kode Arsip <span class="text-red-500">*</span>
+                    </label>
+                    <TextInput id="kode_arsip" v-model="form.kode_arsip" class="mt-1 block w-full rounded-xl" required placeholder="Contoh: PEM-001/2026 atau RKYT-002" oninvalid="this.setCustomValidity('Kode arsip wajib diisi.')" oninput="this.setCustomValidity('')" />
                     <InputError class="mt-1" :message="form.errors.kode_arsip" />
                 </div>
 
@@ -163,21 +165,27 @@ const submit = () => {
                 </div>
 
                 <div>
-                    <InputLabel for="nomor_surat" value="Nomor Surat" />
-                    <TextInput id="nomor_surat" v-model="form.nomor_surat" class="mt-1 block w-full rounded-xl" required placeholder="Contoh: 001/DSK/2026" />
+                    <label for="nomor_surat" class="block text-sm font-medium text-gray-700">
+                        Nomor Surat <span class="text-red-500">*</span>
+                    </label>
+                    <TextInput id="nomor_surat" v-model="form.nomor_surat" class="mt-1 block w-full rounded-xl" required placeholder="Contoh: 140/933/2026 atau 001/BPD/2026" oninvalid="this.setCustomValidity('Nomor surat wajib diisi.')" oninput="this.setCustomValidity('')" />
                     <InputError class="mt-1" :message="form.errors.nomor_surat" />
                 </div>
 
                 <div>
-                    <InputLabel for="perihal" value="Perihal" />
-                    <TextInput id="perihal" v-model="form.perihal" class="mt-1 block w-full rounded-xl" required placeholder="Contoh: Surat Masuk atau Surat Keluar" />
+                    <label for="perihal" class="block text-sm font-medium text-gray-700">
+                        Perihal <span class="text-red-500">*</span>
+                    </label>
+                    <TextInput id="perihal" v-model="form.perihal" class="mt-1 block w-full rounded-xl" required placeholder="Contoh: Undangan Rapat Musrenbang atau Pengantar SKTM" oninvalid="this.setCustomValidity('Perihal surat wajib diisi.')" oninput="this.setCustomValidity('')" />
                     <InputError class="mt-1" :message="form.errors.perihal" />
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                        <InputLabel for="jenis_surat" value="Jenis Surat" />
-                        <select id="jenis_surat" v-model="form.jenis_surat" class="mt-1 block w-full rounded-xl border-slate-300 shadow-sm">
+                        <label for="jenis_surat" class="block text-sm font-medium text-gray-700">
+                            Jenis Surat <span class="text-red-500">*</span>
+                        </label>
+                        <select id="jenis_surat" v-model="form.jenis_surat" class="mt-1 block w-full rounded-xl border-slate-300 shadow-sm" required oninvalid="this.setCustomValidity('Jenis surat wajib dipilih.')" oninput="this.setCustomValidity('')">
                             <option value="masuk">Masuk</option>
                             <option value="keluar">Keluar</option>
                         </select>
@@ -197,8 +205,10 @@ const submit = () => {
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                        <InputLabel for="tanggal_surat" value="Tanggal Surat" />
-                        <TextInput id="tanggal_surat" v-model="form.tanggal_surat" type="date" class="mt-1 block w-full rounded-xl" required />
+                        <label for="tanggal_surat" class="block text-sm font-medium text-gray-700">
+                            Tanggal Surat <span class="text-red-500">*</span>
+                        </label>
+                        <TextInput id="tanggal_surat" v-model="form.tanggal_surat" type="date" class="mt-1 block w-full rounded-xl" required oninvalid="this.setCustomValidity('Tanggal surat wajib dipilih.')" oninput="this.setCustomValidity('')" />
                         <InputError class="mt-1" :message="form.errors.tanggal_surat" />
                     </div>
                     <div>
@@ -210,19 +220,21 @@ const submit = () => {
 
                 <div>
                     <InputLabel for="asal_instansi" value="Asal Instansi" />
-                    <TextInput id="asal_instansi" v-model="form.asal_instansi" class="mt-1 block w-full rounded-xl" placeholder="Contoh: Nama Instansi" />
+                    <TextInput id="asal_instansi" v-model="form.asal_instansi" class="mt-1 block w-full rounded-xl" placeholder="Contoh: Kecamatan Kebayoran Lama atau Warga RT 01/RW 02" />
                     <InputError class="mt-1" :message="form.errors.asal_instansi" />
                 </div>
 
                 <div>
                     <InputLabel for="tujuan_instansi" value="Tujuan Instansi" />
-                    <TextInput id="tujuan_instansi" v-model="form.tujuan_instansi" class="mt-1 block w-full rounded-xl" placeholder="Contoh: Nama Instansi" />
+                    <TextInput id="tujuan_instansi" v-model="form.tujuan_instansi" class="mt-1 block w-full rounded-xl" placeholder="Contoh: Seksi Pemerintahan atau Kelurahan Grogol Selatan" />
                     <InputError class="mt-1" :message="form.errors.tujuan_instansi" />
                 </div>
 
                 <div>
-                    <InputLabel for="seksi_id" value="Seksi" />
-                    <select id="seksi_id" v-model="form.seksi_id" class="mt-1 block w-full rounded-xl border-slate-300 shadow-sm" required>
+                    <label for="seksi_id" class="block text-sm font-medium text-gray-700">
+                        Seksi Penanggung Jawab <span class="text-red-500">*</span>
+                    </label>
+                    <select id="seksi_id" v-model="form.seksi_id" class="mt-1 block w-full rounded-xl border-slate-300 shadow-sm" required oninvalid="this.setCustomValidity('Seksi penanggung jawab wajib dipilih.')" oninput="this.setCustomValidity('')">
                         <option
                             v-for="seksi in seksiList"
                             :key="seksi.id"
@@ -250,15 +262,15 @@ const submit = () => {
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div>
                         <InputLabel for="nomor_box" value="Nomor Box" />
-                        <TextInput id="nomor_box" v-model="form.nomor_box" class="mt-1 block w-full rounded-xl" placeholder="Contoh: B-01" />
+                        <TextInput id="nomor_box" v-model="form.nomor_box" class="mt-1 block w-full rounded-xl" placeholder="Contoh: B-01 atau Box-A" />
                     </div>
                     <div>
                         <InputLabel for="nomor_map" value="Nomor Map" />
-                        <TextInput id="nomor_map" v-model="form.nomor_map" class="mt-1 block w-full rounded-xl" placeholder="Contoh: Map 01" />
+                        <TextInput id="nomor_map" v-model="form.nomor_map" class="mt-1 block w-full rounded-xl" placeholder="Contoh: Map Merah 01" />
                     </div>
                     <div>
                         <InputLabel for="nomor_slot" value="Nomor Slot" />
-                        <TextInput id="nomor_slot" v-model="form.nomor_slot" class="mt-1 block w-full rounded-xl" placeholder="Contoh: S-01" />
+                        <TextInput id="nomor_slot" v-model="form.nomor_slot" class="mt-1 block w-full rounded-xl" placeholder="Contoh: S-12" />
                     </div>
                 </div>
 

@@ -69,7 +69,6 @@ const submit = () => {
                     class="mt-1 block w-full rounded-xl"
                     required
                     autofocus
-                    placeholder="Contoh: Nama peminjam atau instansi..."
                 />
                 <InputError class="mt-1" :message="form.errors.pihak_terkait" />
             </div>
@@ -81,7 +80,6 @@ const submit = () => {
                     v-model="form.keterangan"
                     rows="3"
                     class="mt-1 block w-full rounded-xl border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
-                    placeholder="Catatan mengenai peminjaman/pengembalian (opsional)..."
                 />
                 <InputError class="mt-1" :message="form.errors.keterangan" />
                 <InputError class="mt-1" :message="form.errors.sirkulasi" />

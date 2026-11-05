@@ -26,8 +26,10 @@ class ActivityLogController extends Controller
             'activities' => ActivityLog::query()
                 ->with('user:id,name,email,role')
                 ->whereNotIn('route_name', [
-                    'password.email',
-                    'password.store',
+                    'password.request',
+                    'password.otp.send',
+                    'password.otp.verify',
+                    'password.otp.reset',
                     'password.confirm',
                     'verification.send',
                 ])
@@ -64,8 +66,10 @@ class ActivityLogController extends Controller
             $query = ActivityLog::query()
                 ->with('user:id,name,email,role')
                 ->whereNotIn('route_name', [
-                    'password.email',
-                    'password.store',
+                    'password.request',
+                    'password.otp.send',
+                    'password.otp.verify',
+                    'password.otp.reset',
                     'password.confirm',
                     'verification.send',
                 ]);

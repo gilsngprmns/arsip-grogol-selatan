@@ -773,7 +773,7 @@ onUnmounted(() => {
                     v-model="settersediaKeterangan"
                     rows="3"
                     class="mt-1 block w-full rounded-xl border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
-                    placeholder="Contoh: Ditemukan kembali di tempat penyimpanan"
+                    placeholder="Contoh: Ditemukan kembali di rak PEM-3"
                 />
             </div>
 
@@ -814,7 +814,7 @@ onUnmounted(() => {
                     v-model="hilangKeterangan"
                     rows="3"
                     class="mt-1 block w-full rounded-xl border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
-                    placeholder="Contoh: Belum ditemukan saat pengecekan, masih dalam proses pencarian"
+                    placeholder="Contoh: Tidak ditemukan saat pengecekan rak, masih dicari"
                 />
             </div>
 

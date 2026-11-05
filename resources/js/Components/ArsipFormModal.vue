@@ -232,7 +232,7 @@ const submit = () => {
                         id="kode_arsip"
                         v-model="form.kode_arsip"
                         class="mt-1 block w-full"
-                        placeholder="Contoh: ARS-001"
+                        placeholder="Contoh: PEM-001/2026 atau RKYT-002"
                         required
                     />
                     <InputError class="mt-1" :message="form.errors.kode_arsip" />
@@ -258,7 +258,7 @@ const submit = () => {
                         id="nomor_surat"
                         v-model="form.nomor_surat"
                         class="mt-1 block w-full"
-                        placeholder="Contoh: 001/DSK/2026"
+                        placeholder="Contoh: 140/933/2026 atau 001/BPD/2026"
                         required
                     />
                     <InputError class="mt-1" :message="form.errors.nomor_surat" />
@@ -309,7 +309,7 @@ const submit = () => {
                     id="asal_instansi"
                     v-model="form.asal_instansi"
                     class="mt-1 block w-full"
-                    placeholder="Contoh: Nama Instansi"
+                    placeholder="Contoh: Kecamatan Kebayoran Lama atau Warga RT 01/RW 02"
                 />
                 <InputError class="mt-1" :message="form.errors.asal_instansi" />
             </div>
@@ -320,7 +320,7 @@ const submit = () => {
                     id="tujuan_instansi"
                     v-model="form.tujuan_instansi"
                     class="mt-1 block w-full"
-                    placeholder="Contoh: Nama Instansi"
+                    placeholder="Contoh: Seksi Pemerintahan atau Kelurahan Grogol Selatan"
                 />
                 <InputError class="mt-1" :message="form.errors.tujuan_instansi" />
             </div>
@@ -332,7 +332,7 @@ const submit = () => {
                     v-model="form.perihal"
                     rows="3"
                     class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue"
-                    placeholder="Contoh: Surat Masuk atau Surat Keluar"
+                    placeholder="Contoh: Undangan Rapat Musrenbang atau Pengantar SKTM"
                     required
                 />
                 <InputError class="mt-1" :message="form.errors.perihal" />
@@ -353,15 +353,15 @@ const submit = () => {
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                     <InputLabel for="nomor_box" value="Nomor Box" />
-                    <TextInput id="nomor_box" v-model="form.nomor_box" class="mt-1 block w-full" placeholder="Contoh: B-01" />
+                    <TextInput id="nomor_box" v-model="form.nomor_box" class="mt-1 block w-full" placeholder="Contoh: B-01 atau Box-A" />
                 </div>
                 <div>
                     <InputLabel for="nomor_map" value="Nomor Map" />
-                    <TextInput id="nomor_map" v-model="form.nomor_map" class="mt-1 block w-full" placeholder="Contoh: Map 01" />
+                    <TextInput id="nomor_map" v-model="form.nomor_map" class="mt-1 block w-full" placeholder="Contoh: Map Merah 01" />
                 </div>
                 <div>
                     <InputLabel for="nomor_slot" value="Nomor Slot" />
-                    <TextInput id="nomor_slot" v-model="form.nomor_slot" class="mt-1 block w-full" placeholder="Contoh: S-01" />
+                    <TextInput id="nomor_slot" v-model="form.nomor_slot" class="mt-1 block w-full" placeholder="Contoh: S-12" />
                 </div>
             </div>
 

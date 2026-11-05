@@ -333,11 +333,11 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
                     <div class="mt-2 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">Nama lengkap</label>
-                            <input v-model="createForm.name" type="text" :class="inputClass" placeholder="Contoh: Ahmad Fauzi">
+                            <input v-model="createForm.name" type="text" :class="inputClass">
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">Email</label>
-                            <input v-model="createForm.email" type="email" :class="inputClass" placeholder="Contoh: user@example.com">
+                            <input v-model="createForm.email" type="email" :class="inputClass">
                         </div>
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">Password</label>
@@ -630,11 +630,11 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
                         <div class="mt-3 grid gap-4 sm:grid-cols-2">
                             <div class="sm:col-span-2">
                                 <label class="mb-1 block text-sm font-medium text-slate-700">Nama lengkap</label>
-                                <input v-model="editForm.name" type="text" :class="inputClass" placeholder="Contoh: Ahmad Fauzi">
+                                <input v-model="editForm.name" type="text" :class="inputClass">
                             </div>
                             <div class="sm:col-span-2">
                                 <label class="mb-1 block text-sm font-medium text-slate-700">Email</label>
-                                <input v-model="editForm.email" type="email" :class="inputClass" placeholder="Contoh: user@example.com">
+                                <input v-model="editForm.email" type="email" :class="inputClass">
                             </div>
                         </div>
                     </section>

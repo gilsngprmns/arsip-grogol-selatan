@@ -340,12 +340,14 @@ class RecordActivity
         }
 
         return in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'], true)
-            && ! $request->is('login', 'logout', 'forgot-password', 'reset-password', 'confirm-password', 'email/verification-notification')
+            && ! $request->is('login', 'logout', 'forgot-password/*', 'reset-password', 'confirm-password', 'email/verification-notification')
             && ! in_array($routeName, [
                 'login',
                 'logout',
-                'password.email',
-                'password.store',
+                'password.request',
+                'password.otp.send',
+                'password.otp.verify',
+                'password.otp.reset',
                 'password.confirm',
                 'verification.send',
             ], true);
