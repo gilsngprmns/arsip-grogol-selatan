@@ -5,7 +5,7 @@ import EmptyState from '@/Components/EmptyState.vue';
 import Modal from '@/Components/Modal.vue';
 import UserActionButtons from '@/Components/UserActionButtons.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
     users: { type: Object, default: () => ({ data: [], links: [], current_page: 1, last_page: 1 }) },
@@ -23,6 +23,12 @@ let flashTimer = null;
 const flashDanger = computed(() => page.props.flash?.danger);
 const flashDangerVisible = ref(false);
 let flashDangerTimer = null;
+
+const pageRecovery = computed(() =>
+    page.props.flash?.recovery && page.props.flash?.recovery_email
+        ? page.props.flash.recovery_email
+        : false,
+);
 
 watch(
     () => page.props.flash?.success,
@@ -229,6 +235,13 @@ const confirmDeleteUser = () => {
     });
 };
 
+onMounted(() => {
+    if (pageRecovery.value) {
+        const target = userRows.value.find((u) => u.email === pageRecovery.value);
+        if (target) openResetPassword(target);
+    }
+});
+
 const applyFilters = () => {
     router.get(route('users.index'), filters.value, {
         preserveState: true,
@@ -292,10 +305,10 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
                 </div>
                 <a
                     :href="route('reports.users')"
-                    class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-sm hover:bg-slate-50"
+                    class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
                 >
-                    <AppIcon name="download" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
-                    Unduh laporan user
+                    <AppIcon name="excel" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
+                    Ekspor Excel
                 </a>
             </div>
         </template>
@@ -732,6 +745,15 @@ const eyeBtnClass = 'absolute inset-y-0 right-0 flex items-center px-3 text-slat
                 </div>
 
                 <div class="mt-5 space-y-4">
+                    <div
+                        v-if="resetTarget && (!resetTarget.is_active || pageRecovery)"
+                        class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800"
+                        role="alert"
+                    >
+                        Akun terindikasi dibobol — wajib isi kata sandi baru sebelum staf
+                        dapat login kembali.
+                    </div>
+
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">Password baru</label>
                         <div class="relative">

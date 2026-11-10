@@ -25,9 +25,11 @@ class BackupController extends Controller
     /**
      * Tampilkan halaman cadangan & pemulihan.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $tersimpan = $this->bundles->listBundles();
+        $limit = max(10, min(50, $request->integer('limit') ?: 10));
+        $tersimpan = $this->bundles->listBundles($limit);
+        $adaLebihLama = count($tersimpan) === $limit;
 
         // Indeks "cadangan terakhir" — > 7 hari memicu peringatan merah di UI
         $terbaru = $tersimpan[0]['diambil_pada'] ?? null;
@@ -39,6 +41,8 @@ class BackupController extends Controller
             'totalArsip' => DokumenArsip::withTrashed()->count(),
             'aktifArsip' => DokumenArsip::count(),
             'daftarBackup' => $tersimpan,
+            'limit' => $limit,
+            'adaLebihLama' => $adaLebihLama,
             'cadanganTerakhir' => [
                 'diambil_pada' => $terbaru,
                 'umur_hari' => $umurHari,
@@ -160,8 +164,11 @@ class BackupController extends Controller
                 return back()->withInput()->withErrors(['backup_file' => $e->getMessage()])->with('error', $e->getMessage());
             }
 
-            $metrik = $this->bundles->importBundle($hasil['payload'], $hasil['files_root'], $hasil['daftar_file']);
-            $this->bundles->cleanupExtraction($hasil['temp_dir']);
+            try {
+                $metrik = $this->bundles->importBundle($hasil['payload'], $hasil['files_root'], $hasil['daftar_file']);
+            } finally {
+                $this->bundles->cleanupExtraction($hasil['temp_dir']);
+            }
 
             $this->pasangHasilImport($namaFile, 'v2 (bundel ZIP)', 'lulus', $hasil['meta'] ?? [], $metrik);
 

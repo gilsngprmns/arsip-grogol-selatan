@@ -88,6 +88,9 @@ const actionMap = {
     'faq.destroy': 'Hapus FAQ bantuan',
     'auth.login': 'Login',
     'auth.logout': 'Logout',
+    'password.otp.send': 'Aktivitas pemulihan kata sandi',
+    'password.otp.verify': 'Verifikasi pemulihan kata sandi',
+    'password.otp.finish': 'Selesai ganti kata sandi',
     // GET — halaman utama
     'dashboard': 'Dashboard',
     'arsip.index': 'Daftar arsip',
@@ -132,6 +135,12 @@ const actionBadge = (activity) => {
     const key = activity.route_name || activity.action || '';
     if (key === 'auth.login' || key === 'auth.logout') {
         return 'bg-sky-50 text-sky-800 ring-sky-300';
+    }
+    if (key === 'password.otp.finish') {
+        return 'bg-emerald-50 text-emerald-800 ring-emerald-300';
+    }
+    if (key === 'password.otp.send' || key === 'password.otp.verify') {
+        return 'bg-violet-50 text-violet-800 ring-violet-300';
     }
     const suffix = key.split('.').pop();
     if (suffix === 'store' || key === 'arsip.kembalikan' || key === 'arsip.settersedia' || key === 'users.activate') {
@@ -330,8 +339,8 @@ const applyShortcut = (days) => {
     applyFilters();
 };
 
-// --- Unduh CSV mengikuti filter aktif ---
-const csvUrl = computed(() => {
+// --- Ekspor Excel mengikuti filter aktif ---
+const excelUrl = computed(() => {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(localFilters.value)) {
         if (value) params.set(key, value);
@@ -403,12 +412,12 @@ const shortcutClass = 'rounded-xl border border-slate-200 px-3 py-1.5 text-xs fo
                         Diperbarui {{ lastPolledLabel }}
                     </p>
                     <a
-                        :href="csvUrl"
-                        class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-sm hover:bg-slate-50 sm:flex-none"
+                        :href="excelUrl"
+                        class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 sm:flex-none"
                         title="Unduh log aktivitas sesuai filter aktif"
                     >
-                        <AppIcon name="download" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
-                        Unduh CSV
+                        <AppIcon name="excel" :size="16" :stroke-width="1.8" class="h-4 w-4" decorative />
+                        Ekspor Excel
                     </a>
                 </div>
             </div>

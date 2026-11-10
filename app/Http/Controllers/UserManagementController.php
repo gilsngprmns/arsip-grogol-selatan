@@ -111,7 +111,22 @@ class UserManagementController extends Controller
             ]);
         }
 
+        $wasInactive = ! $user->is_active;
+        $willActivate = ($validated['is_active'] ?? false) === true;
+
         $user->update($validated);
+
+        // Recovery dari lockout brute-force: wajib reset counter saat
+        // admin mengaktifkan kembali akun yang sedang nonaktif.
+        if ($wasInactive && $willActivate) {
+            $user->login_attempts = 0;
+            $user->save();
+
+            return redirect()->route('users.index')
+                ->with('success', 'Pengguna berhasil diperbarui.')
+                ->with('recovery', true)
+                ->with('recovery_email', $user->email);
+        }
 
         return redirect()->route('users.index')->with('success', 'Pengguna berhasil diperbarui.');
     }

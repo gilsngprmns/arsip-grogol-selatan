@@ -1,5 +1,6 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import AppIcon from '@/Components/AppIcon.vue';
 import Modal from '@/Components/Modal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -18,6 +19,14 @@ defineProps({
     daftarBackup: {
         type: Array,
         default: () => [],
+    },
+    limit: {
+        type: Number,
+        default: 10,
+    },
+    adaLebihLama: {
+        type: Boolean,
+        default: false,
     },
     cadanganTerakhir: {
         type: Object,
@@ -277,7 +286,8 @@ const runNow = () => {
                 <p class="mt-2 text-sm text-slate-500">
                     Unggah file cadangan (<span class="font-medium">.zip</span> lengkap atau
                     <span class="font-medium">.json</span>). Data dipulihkan berdasarkan
-                    <span class="font-semibold">kode_arsip</span> tanpa menghapus data lain.
+                    <span class="font-semibold">kode_arsip</span> tanpa menghapus data lain —
+                    arsip yang dibuat setelah tanggal backup tidak dihapus, hanya yang ada di file cadangan yang diperbarui.
                 </p>
 
                 <input
@@ -315,35 +325,53 @@ const runNow = () => {
                 Belum ada cadangan tersimpan. Klik "Cadangkan Sekarang" untuk membuatnya.
             </div>
 
-            <table v-else class="mt-4 w-full text-left text-sm">
-                <thead class="border-b border-slate-200 text-xs uppercase text-slate-500">
-                    <tr>
-                        <th class="py-2 pr-4">File</th>
-                        <th class="py-2 pr-4">Waktu</th>
-                        <th class="py-2 pr-4">Isi</th>
-                        <th class="py-2 pr-4">Ukuran</th>
-                        <th class="py-2"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    <tr v-for="b in daftarBackup" :key="b.nama_file" class="hover:bg-slate-50">
-                        <td class="py-2.5 pr-4 font-mono text-xs">{{ b.nama_file }}</td>
-                        <td class="py-2.5 pr-4 text-slate-600">{{ formatWaktu(b.diambil_pada) }}</td>
-                        <td class="py-2.5 pr-4 text-slate-600">
-                            <span v-if="b.rincian">{{ b.rincian.dokumen_arsip ?? 0 }} arsip · {{ b.rincian.file_fisik ?? 0 }} file</span>
-                        </td>
-                        <td class="py-2.5 pr-4 text-slate-600">{{ formatUkur(b.ukuran_bytes) }}</td>
-                        <td class="py-2.5 text-right">
-                            <a
-                                :href="route('backup.files', b.nama_file)"
-                                class="inline-flex items-center gap-1 text-sm font-semibold text-brand-blue hover:underline"
-                            >
-                                Unduh
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div v-else>
+                <table class="mt-4 w-full text-left text-sm">
+                    <thead class="border-b border-slate-200 text-xs uppercase text-slate-500">
+                        <tr>
+                            <th class="py-2 pr-4">File</th>
+                            <th class="py-2 pr-4">Waktu</th>
+                            <th class="py-2 pr-4">Isi</th>
+                            <th class="py-2 pr-4">Ukuran</th>
+                            <th class="py-2"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr v-for="b in daftarBackup" :key="b.nama_file" class="hover:bg-slate-50">
+                            <td class="py-2.5 pr-4 font-mono text-xs">{{ b.nama_file }}</td>
+                            <td class="py-2.5 pr-4 text-slate-600">{{ formatWaktu(b.diambil_pada) }}</td>
+                            <td class="py-2.5 pr-4 text-slate-600">
+                                <span v-if="b.rincian">{{ b.rincian.dokumen_arsip ?? 0 }} arsip · {{ b.rincian.file_fisik ?? 0 }} file</span>
+                            </td>
+                            <td class="py-2.5 pr-4 text-slate-600">{{ formatUkur(b.ukuran_bytes) }}</td>
+                            <td class="py-2.5 text-right">
+                                <a
+                                    :href="route('backup.files', b.nama_file)"
+                                    class="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue hover:text-blue-700"
+                                >
+                                    <AppIcon name="download" :size="14" :stroke-width="1.8" class="shrink-0" decorative />
+                                    Unduh
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div v-if="adaLebihLama" class="mt-4 flex items-center justify-between">
+                    <button
+                        type="button"
+                        class="text-sm font-medium text-brand-blue hover:text-blue-700"
+                        @click="router.get(route('backup.index'), { limit: limit + 10 })"
+                    >
+                        Lihat yang lebih lama
+                    </button>
+                </div>
+
+                <p class="mt-3 text-xs text-slate-400">
+                    Daftar menampilkan {{ limit }} cadangan terbaru. File cadangan lebih tua dari 14 hari
+                    dihapus otomatis oleh retensi server. Unduh file untuk menyimpannya secara lokal.
+                </p>
+            </div>
         </div>
     </AppLayout>
 

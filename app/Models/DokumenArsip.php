@@ -36,6 +36,7 @@ class DokumenArsip extends Model
         'batas_pengembalian',
         'dicatat_oleh',
         'catatan',
+        'deleted_at',
     ];
 
     protected function casts(): array

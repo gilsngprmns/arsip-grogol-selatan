@@ -16,7 +16,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Exports\DocumentExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ArsipController extends Controller
 {
@@ -47,59 +48,16 @@ class ArsipController extends Controller
     }
 
     /**
-     * Ekspor daftar arsip (mengikuti filter aktif) ke CSV.
+     * Ekspor daftar arsip (mengikuti filter aktif) ke Excel .xlsx.
      */
-    public function exportCsv(Request $request): StreamedResponse
+    public function exportExcel(Request $request)
     {
-        $filename = 'arsip-dokumen-'.now()->format('YmdHis').'.csv';
         $query = $this->filteredQuery($request);
 
-        return response()->streamDownload(function () use ($query) {
-            $handle = fopen('php://output', 'w');
-
-            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
-
-            fputcsv($handle, [
-                'Kode Arsip',
-                'Nomor Surat',
-                'Perihal',
-                'Jenis Surat',
-                'Sifat Surat',
-                'Tanggal Surat',
-                'Tanggal Diterima',
-                'Asal Instansi',
-                'Tujuan Instansi',
-                'Seksi',
-                'Status Arsip',
-                'Catatan',
-                'File Path',
-            ], ';');
-
-            $query->chunk(200, function ($rows) use ($handle) {
-                foreach ($rows as $row) {
-                    fputcsv($handle, [
-                        $row->kode_arsip,
-                        $row->nomor_surat,
-                        $row->perihal,
-                        $row->jenis_surat,
-                        $row->sifat_surat,
-                        optional($row->tanggal_surat)?->format('Y-m-d'),
-                        optional($row->tanggal_diterima)?->format('Y-m-d'),
-                        $row->asal_instansi,
-                        $row->tujuan_instansi,
-                        $row->seksi?->nama_seksi,
-                        $row->status_arsip,
-                        $row->catatan,
-                        $row->file_path,
-                    ], ';');
-                }
-            });
-
-            fclose($handle);
-        }, $filename, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="'.basename($filename).'"',
-        ]);
+        return Excel::download(
+            new DocumentExport($query->get()),
+            'arsip-dokumen-'.now()->format('YmdHis').'.xlsx',
+        );
     }
 
     /**

@@ -180,7 +180,7 @@ Route::get('/dashboard', function (\Illuminate\Http\Request $request) {
     $recentDocuments = (clone $documentQuery)
         ->with(['seksi:id,nama_seksi', 'rak:id,kode_rak,nama_rak'])
         ->latest('created_at')
-        ->limit(6)
+        ->limit(5)
         ->get(['id', 'kode_arsip', 'perihal', 'status_arsip', 'seksi_id', 'rak_id', 'created_at']);
 
     $recentActivities = ActivityLog::query()
@@ -260,7 +260,7 @@ Route::get('/dashboard', function (\Illuminate\Http\Request $request) {
 
 Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/scan', fn () => Inertia::render('Scan/Index'))->name('scan.index');
-    Route::get('arsip/export', [ArsipController::class, 'exportCsv'])->name('arsip.export');
+    Route::get('arsip/export', [ArsipController::class, 'exportExcel'])->name('arsip.export');
     Route::post('arsip/{arsip}/pinjam', [ArsipController::class, 'pinjam'])->name('arsip.pinjam');
     Route::post('arsip/{arsip}/kembalikan', [ArsipController::class, 'kembalikan'])->name('arsip.kembalikan');
     Route::post('arsip/{arsip}/settersedia', [ArsipController::class, 'settersedia'])->name('arsip.settersedia');
@@ -302,10 +302,10 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
         Route::post('/users/{user}/force-delete', [UserManagementController::class, 'forceDelete'])->name('users.force-delete');
         Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity.index');
-        Route::get('/reports/activity.csv', [ReportController::class, 'activity'])->name('reports.activity');
-        Route::get('/reports/users.csv', [ReportController::class, 'users'])->name('reports.users');
-        Route::get('/reports/racks.csv', [ReportController::class, 'racks'])->name('reports.racks');
-        Route::get('/reports/sections.csv', [ReportController::class, 'sections'])->name('reports.sections');
+        Route::get('/reports/activity', [ReportController::class, 'activityExcel'])->name('reports.activity');
+        Route::get('/reports/users', [ReportController::class, 'usersExcel'])->name('reports.users');
+        Route::get('/reports/racks', [ReportController::class, 'racksExcel'])->name('reports.racks');
+        Route::get('/reports/sections', [ReportController::class, 'sectionsExcel'])->name('reports.sections');
 
         Route::get('/lokasi', fn () => redirect()->route('rak.index'))->name('lokasi.redirect');
         Route::post('/lokasi', [LokasiArsipController::class, 'store'])->name('lokasi.store');

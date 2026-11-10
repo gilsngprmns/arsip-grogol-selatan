@@ -447,7 +447,7 @@ class RecordActivity
             case 'arsip.edit':
                 return 'Membuka form edit arsip.';
             case 'arsip.export':
-                return 'Mengekspor daftar arsip ke CSV.';
+                return 'Mengekspor daftar arsip ke Excel.';
             case 'rak.index':
                 return 'Membuka daftar rak arsip.';
             case 'lokasi.redirect':
